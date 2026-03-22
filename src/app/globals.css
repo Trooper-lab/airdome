@@ -20,14 +20,21 @@
   --white: #FFFFFF;
   --off: #F7F5F2;
   --off2: #EEECEA;
-  --black: #111110;
-  --ink: #2A2926;
-  --gray: #5A5852;
-  --gray2: #76736B;
-  --line: #E2DDD8;
+  --black: #0B0B0C;
+  --ink: #FFFFFF;
+  --gray: #A1A1AA;
+  --gray2: #71717A;
+  --line: rgba(255, 255, 255, 0.1);
+  --accent: #00F2FF;
+  --accent-glow: rgba(0, 242, 255, 0.3);
   
+  /* Glassmorphism tokens */
+  --glass-bg: rgba(17, 17, 17, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.03);
+
   /* Tailwind standard aliases */
-  --background: var(--white);
+  --background: var(--black);
   --foreground: var(--ink);
 }
 
@@ -35,18 +42,23 @@
   --color-white: var(--white);
   --color-off: var(--off);
   --color-off2: var(--off2);
+  --color-soft-black: #111111;
   --color-black: var(--black);
   --color-ink: var(--ink);
   --color-gray: var(--gray);
   --color-gray2: var(--gray2);
   --color-line: var(--line);
   --color-border: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-glow: var(--accent-glow);
 
   --font-plus: 'Plus Jakarta Sans', sans-serif;
   --font-syne: 'Syne', sans-serif;
 
-  --color-background: var(--white);
+  --color-background: var(--black);
   --color-foreground: var(--ink);
+  
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 @layer base {

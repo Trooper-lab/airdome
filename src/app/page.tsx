@@ -47,7 +47,7 @@ export default function Home() {
       case 7:
         return <Step7_FinalConfig selections={selections} onContinue={nextStep} />;
       case 8:
-        return <Step8_Lead onComplete={() => alert("Flow Complete!")} />;
+        return <Step8_Lead selections={selections} onComplete={() => alert("Flow Complete!")} />;
       default:
         return <div>All steps completed</div>;
     }

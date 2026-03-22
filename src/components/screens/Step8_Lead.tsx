@@ -26,15 +26,38 @@ const SuccessScreen: React.FC = () => {
   );
 };
 
-export const Step8_Lead: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+export const Step8_Lead: React.FC<{ 
+  selections: any; 
+  onComplete: () => void 
+}> = ({ selections, onComplete }) => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      setSubmitted(true);
-      setTimeout(() => onComplete(), 1500);
+    if (email && !isSubmitting) {
+      setIsSubmitting(true);
+      try {
+        await fetch("/api/leads", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+             email,
+             brandUrl: selections.brand?.url || null,
+             personality: selections.personality,
+             vibe: selections.vibe,
+             size: selections.size,
+             config: selections.config,
+             event: selections.event
+          }),
+        });
+      } catch (error) {
+        console.error("Failed to submit lead", error);
+      } finally {
+        setSubmitted(true);
+        setTimeout(() => onComplete(), 1500);
+      }
     }
   };
 
