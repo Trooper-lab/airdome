@@ -64,7 +64,7 @@ export default function DashboardLayout({ children, user, activeTab, setActiveTa
   ];
 
   return (
-    <div className="flex min-h-screen bg-black text-white font-plus overflow-hidden">
+    <div className="flex min-h-screen bg-black text-white font-spline overflow-hidden">
       {/* Dynamic Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent/10 blur-[120px] rounded-full" />
@@ -76,9 +76,9 @@ export default function DashboardLayout({ children, user, activeTab, setActiveTa
         <div className="p-8">
           <div className="flex items-center gap-3 mb-12">
             <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,242,255,0.3)]">
-              <span className="text-black font-syne font-extrabold text-xl">A</span>
+              <span className="text-black font-spline font-extrabold text-xl">A</span>
             </div>
-            <span className="font-syne font-extrabold text-2xl tracking-tight">AIRDOME</span>
+            <span className="font-spline font-extrabold text-2xl tracking-tight">AIRDOME</span>
           </div>
 
           <nav className="space-y-2">

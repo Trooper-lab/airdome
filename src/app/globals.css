@@ -1,21 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: 'Syne';
-  font-style: normal;
-  font-weight: 400 800;
-  font-display: swap;
-  src: url(https://fonts.gstatic.com/s/syne/v22/89hcRndG1SldkuG_CXYN.woff2) format('woff2');
-}
-
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 200 800;
-  font-display: swap;
-  src: url(https://fonts.gstatic.com/s/plusjakartasans/v8/L0xPDFytS9qS6v6Z_h_5qT8S1X9t3P9S4q3P9p7P9q3S4q3S.woff2) format('woff2');
-}
-
 :root {
   --white: #FFFFFF;
   --off: #F7F5F2;
@@ -52,8 +36,7 @@
   --color-accent: var(--accent);
   --color-accent-glow: var(--accent-glow);
 
-  --font-plus: 'Plus Jakarta Sans', sans-serif;
-  --font-syne: 'Syne', sans-serif;
+  --font-spline: var(--font-spline), sans-serif;
 
   --color-background: var(--black);
   --color-foreground: var(--ink);
@@ -76,9 +59,13 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-plus);
+    font-family: var(--font-spline), sans-serif;
     font-weight: 300;
     min-height: 100vh;
     overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-spline), sans-serif;
   }
 }
