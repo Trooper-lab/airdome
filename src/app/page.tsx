@@ -128,12 +128,12 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="pt-36 pb-0 flex flex-col items-center text-center px-6 justify-center">
         
-        {/* Trusted By Section */}
+        {/* Top Logo Reveal (Dynamic & Colored) */}
         <div className="trusted-by w-full max-w-5xl mb-12">
-          <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-6">
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-6">
             {t("hero.trust")}
           </div>
-          <div className="relative h-10 flex justify-center items-center opacity-70 grayscale">
+          <div className="relative h-12 flex justify-center items-center">
              {[
                { src: "/logos/volvo.svg", alt: "Volvo", h: "h-5 md:h-6" },
                { src: "/logos/heineken.svg", alt: "Heineken", h: "h-7 md:h-8" },
@@ -144,11 +144,11 @@ export default function LandingPage() {
              ].map((logo, i) => (
                 <div key={i} className="logo-item absolute inset-0 flex items-center justify-center opacity-0 overflow-hidden">
                   {logo.type === "text" ? (
-                    <div className="text-[12px] md:text-sm font-bold bg-gray-100/50 rounded-full px-4 py-1.5 text-black border border-gray-100">
+                    <div className="text-[12px] md:text-sm font-bold bg-gray-50 rounded-full px-5 py-2 text-black border border-gray-100/50">
                       {logo.content}
                     </div>
                   ) : (
-                    <img src={logo.src} alt={logo.alt} className={`${logo.h} w-auto object-contain`} />
+                    <img src={logo.src} alt={logo.alt} className={`${logo.h} w-auto object-contain transition-transform duration-500`} />
                   )}
                 </div>
              ))}
@@ -163,18 +163,34 @@ export default function LandingPage() {
           {t("hero.subline")}
         </p>
 
-        <div className="hero-ctas flex flex-col items-center gap-6">
-          <Link 
-            href="/design"
-            className="group px-10 py-5 bg-black text-white text-lg font-bold rounded-full hover:bg-gray-800 transition-all active:scale-95 shadow-2xl shadow-black/20 flex items-center gap-3"
-          >
-            {t("hero.cta")}
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
-          </Link>
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-[13px] font-bold text-gray-400">
-            <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro1")}</span>
-            <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro2")}</span>
-            <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro3")}</span>
+        <div className="hero-ctas flex flex-col items-center gap-12 mt-4">
+          <div className="flex flex-col items-center gap-6">
+            <Link 
+              href="/design"
+              className="group px-10 py-5 bg-black text-white text-lg font-bold rounded-full hover:bg-gray-800 transition-all active:scale-95 shadow-2xl shadow-black/20 flex items-center gap-3"
+            >
+              {t("hero.cta")}
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </Link>
+            <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-[13px] font-bold text-gray-400">
+              <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro1")}</span>
+              <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro2")}</span>
+              <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro3")}</span>
+            </div>
+          </div>
+
+          {/* Static Gray Logo Bar */}
+          <div className="w-full pt-12 border-t border-gray-50 flex flex-col items-center">
+            <div className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-10">
+              {t("hero.trust")}
+            </div>
+            <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 grayscale opacity-30">
+              <img src="/logos/volvo.svg" alt="Volvo" className="h-4 md:h-5 w-auto" />
+              <img src="/logos/heineken.svg" alt="Heineken" className="h-6 md:h-7 w-auto" />
+              <img src="/logos/mclaren.svg" alt="McLaren" className="h-3.5 md:h-4 w-auto" />
+              <img src="/logos/oakley.svg" alt="Oakley" className="h-6 md:h-7 w-auto" />
+              <img src="/logos/adidas.svg" alt="Adidas" className="h-6 md:h-7 w-auto" />
+            </div>
           </div>
         </div>
       </section>
