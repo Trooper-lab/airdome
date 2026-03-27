@@ -20,30 +20,50 @@ export default function LandingPage() {
   useGSAP(() => {
     // CINEMATIC HERO-TO-SHOWCASE TRANSITION
     if (showcaseRef.current) {
-      const mainTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: showcaseRef.current,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 1,
-        }
+      let mm = gsap.matchMedia();
+
+      mm.add("(min-width: 768px)", () => {
+        // Desktop Animation
+        const mainTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: showcaseRef.current,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 1,
+          }
+        });
+
+        mainTl.to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 })
+              .to(".hero-content-layer", { opacity: 0, y: -50, duration: 1 }, "-=1")
+              .to(".sticky-3d-model", { xPercent: -25, duration: 1.5 }, "-=0.2")
+              .to(".step-1", { opacity: 1, y: 0, duration: 2 }, "+=0.5")
+              .to(".step-1", { opacity: 0, y: -30, duration: 2, delay: 1 })
+              .to(".step-2", { opacity: 1, y: 0, duration: 2 }, "-=0.5")
+              .to(".step-2", { opacity: 0, y: -30, duration: 2, delay: 1 })
+              .to(".step-3", { opacity: 1, y: 0, duration: 2 }, "-=0.5");
       });
 
-      // 1. Model Rise & Appear from bottom
-      mainTl.to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 })
-      
-      // 2. Early Hero Fade Out (Starts halfway through the rise)
-      .to(".hero-content-layer", { opacity: 0, y: -50, duration: 1 }, "-=1")
-      
-      // 3. Model Slide Left
-      .to(".sticky-3d-model", { xPercent: -25, duration: 1.5 }, "-=0.2")
-      
-      // 4. Sequential Steps Reveal
-      .to(".step-1", { opacity: 1, y: 0, duration: 2 }, "+=0.5")
-      .to(".step-1", { opacity: 0, y: -30, duration: 2, delay: 1 })
-      .to(".step-2", { opacity: 1, y: 0, duration: 2 }, "-=0.5")
-      .to(".step-2", { opacity: 0, y: -30, duration: 2, delay: 1 })
-      .to(".step-3", { opacity: 1, y: 0, duration: 2 }, "-=0.5");
+      mm.add("(max-width: 767px)", () => {
+        // Mobile Animation
+        const mobTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: showcaseRef.current,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 1,
+          }
+        });
+
+        // Small screen: Rise, but stay centered horizontally. Shift UP slightly so text fits below.
+        mobTl.to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 })
+             .to(".hero-content-layer", { opacity: 0, y: -50, duration: 1 }, "-=1")
+             .to(".sticky-3d-model", { yPercent: -20, duration: 1.5 }, "-=0.2") 
+             .to(".step-1", { opacity: 1, y: 0, duration: 2 }, "+=0.5")
+             .to(".step-1", { opacity: 0, y: -30, duration: 2, delay: 1 })
+             .to(".step-2", { opacity: 1, y: 0, duration: 2 }, "-=0.5")
+             .to(".step-2", { opacity: 0, y: -30, duration: 2, delay: 1 })
+             .to(".step-3", { opacity: 1, y: 0, duration: 2 }, "-=0.5");
+      });
     }
 
     // Card Deck Animation for Logos
@@ -206,8 +226,8 @@ export default function LandingPage() {
           {/* Showcase Steps Layer (Revealed on Right) */}
           <div className="showcase-steps-layer absolute inset-0 flex items-center px-6 md:px-24 pointer-events-none z-40">
             <div className="flex-1 hidden md:block" /> {/** Spacer for Left 3D side **/}
-            <div className="flex-1 relative h-full flex flex-col justify-center items-start lg:pl-24 pointer-events-auto">
-              <div className="step-1 absolute inset-0 flex flex-col justify-center opacity-0 translate-y-8">
+            <div className="flex-1 relative h-full flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 items-start lg:pl-24 pointer-events-auto">
+              <div className="step-1 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8">
                 <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 01</div>
                 <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
                   {t("how.step1.title")}
@@ -217,7 +237,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="step-2 absolute inset-0 flex flex-col justify-center opacity-0 translate-y-8">
+              <div className="step-2 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8">
                 <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 02</div>
                 <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
                   {t("how.step2.title")}
@@ -227,7 +247,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="step-3 absolute inset-0 flex flex-col justify-center opacity-0 translate-y-8">
+              <div className="step-3 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8">
                 <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 03</div>
                 <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
                   {t("how.step3.title")}
@@ -301,7 +321,7 @@ export default function LandingPage() {
       <section className="py-40 px-6 max-w-6xl mx-auto">
         <div className="mb-32">
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-6">Social Proof</div>
-          <h2 className="text-5xl md:text-7xl font-spline font-light text-black tracking-tight leading-[1.05] max-w-4xl">
+          <h2 className="text-5xl md:text-7xl font-spline font-bold text-black tracking-tight leading-[1.05] max-w-4xl">
             Trusted by global leaders to <span className="text-gray-300">own the space.</span>
           </h2>
         </div>
