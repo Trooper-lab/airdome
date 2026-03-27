@@ -18,40 +18,35 @@ export default function LandingPage() {
   const { t } = useLanguage();
 
   useGSAP(() => {
-    const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+    // CINEMATIC HERO-TO-SHOWCASE TRANSITION
+    if (showcaseRef.current) {
+      const mainTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: showcaseRef.current,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 1,
+        }
+      });
 
-    tl.from(".nav-pill", {
-      y: -20,
-      opacity: 0,
-      duration: 1,
-      delay: 0.2
-    })
-    .from(".hero-title", {
-      y: 40,
-      opacity: 0,
-      duration: 1
-    }, "-=0.6")
-    .from(".hero-sub", {
-      y: 20,
-      opacity: 0,
-      duration: 1
-    }, "-=0.8")
-    .from(".hero-ctas", {
-      y: 20,
-      opacity: 0,
-      duration: 1
-    }, "-=0.8")
-    .from(".trusted-by", {
-      opacity: 0,
-      duration: 1
-    }, "-=0.5")
-    .from(".showcase-section", {
-      opacity: 0,
-      y: 50,
-      duration: 1
-    }, "-=0.8");
+      // 1. Model Rise & Appear from bottom
+      mainTl.to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 })
+      
+      // 2. Early Hero Fade Out (Starts halfway through the rise)
+      .to(".hero-content-layer", { opacity: 0, y: -50, duration: 1 }, "-=1")
+      
+      // 3. Model Slide Left
+      .to(".sticky-3d-model", { xPercent: -25, duration: 1.5 }, "-=0.2")
+      
+      // 4. Sequential Steps Reveal
+      .to(".step-1", { opacity: 1, y: 0, duration: 2 }, "+=0.5")
+      .to(".step-1", { opacity: 0, y: -30, duration: 2, delay: 1 })
+      .to(".step-2", { opacity: 1, y: 0, duration: 2 }, "-=0.5")
+      .to(".step-2", { opacity: 0, y: -30, duration: 2, delay: 1 })
+      .to(".step-3", { opacity: 1, y: 0, duration: 2 }, "-=0.5");
+    }
 
-    // Card Deck Animation for Logos (Keeping this)
+    // Card Deck Animation for Logos
     const logos = gsap.utils.toArray(".logo-item");
     if (logos.length > 0) {
       const loop = gsap.timeline({ repeat: -1 });
@@ -65,23 +60,12 @@ export default function LandingPage() {
       });
     }
 
-    // DECOUPLED STICKY SCROLL SHOWCASE
-    if (showcaseRef.current) {
-      const stl = gsap.timeline({
-        scrollTrigger: {
-          trigger: showcaseRef.current,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 1,
-        }
-      });
-
-      stl.to(".step-1", { opacity: 1, y: 0, duration: 1 })
-         .to(".step-1", { opacity: 0, y: -30, duration: 1, delay: 0.5 })
-         .to(".step-2", { opacity: 1, y: 0, duration: 1 }, "-=0.3")
-         .to(".step-2", { opacity: 0, y: -30, duration: 1, delay: 0.5 })
-         .to(".step-3", { opacity: 1, y: 0, duration: 1 }, "-=0.3");
-    }
+    // ENTRANCE ANIMATIONS (Non-scroll)
+    const entTl = gsap.timeline({ defaults: { ease: "power4.out" } });
+    entTl.from(".nav-pill", { y: -20, opacity: 0, duration: 1, delay: 0.2 })
+         .from(".hero-title", { y: 40, opacity: 0, duration: 1 }, "-=0.6")
+         .from(".hero-sub", { y: 20, opacity: 0, duration: 1 }, "-=0.8")
+         .from(".hero-ctas", { y: 20, opacity: 0, duration: 1 }, "-=0.8");
 
     // STAGGERED REVEAL FOR REVIEW CARDS
     const cards = gsap.utils.toArray(".review-card");
@@ -101,7 +85,7 @@ export default function LandingPage() {
   }, { scope: containerRef });
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-white font-spline selection:bg-black selection:text-white pb-20">
+    <div ref={containerRef} className="min-h-screen bg-white font-spline selection:bg-black selection:text-white pb-0">
       {/* Navigation - Pill style */}
       <div className="fixed top-6 left-0 right-0 z-[100] flex justify-center px-6">
         <nav className="nav-pill flex items-center bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-full px-6 py-2 gap-8 md:gap-12">
@@ -125,139 +109,144 @@ export default function LandingPage() {
         </nav>
       </div>
 
-      {/* Hero Section */}
-      <section className="pt-36 pb-0 flex flex-col items-center text-center px-6 justify-center">
+      {/* Unified Cinematic Hero-to-Showcase Experience */}
+      <div ref={showcaseRef} className="relative h-[600vh] bg-white">
         
-        {/* Top Logo Reveal (Dynamic & Colored) */}
-        <div className="trusted-by w-full max-w-5xl mb-12">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-6">
-            {t("hero.trust")}
-          </div>
-          <div className="relative h-12 flex justify-center items-center">
-             {[
-               { src: "/logos/volvo.svg", alt: "Volvo", h: "h-5 md:h-6" },
-               { src: "/logos/heineken.svg", alt: "Heineken", h: "h-7 md:h-8" },
-               { src: "/logos/mclaren.svg", alt: "McLaren", h: "h-4 md:h-5" },
-               { src: "/logos/oakley.svg", alt: "Oakley", h: "h-7 md:h-8" },
-               { src: "/logos/adidas.svg", alt: "Adidas", h: "h-7 md:h-8" },
-               { type: "text", content: "+1,500 brands" }
-             ].map((logo, i) => (
-                <div key={i} className="logo-item absolute inset-0 flex items-center justify-center opacity-0 overflow-hidden">
-                  {logo.type === "text" ? (
-                    <div className="text-[12px] md:text-sm font-bold bg-gray-50 rounded-full px-5 py-2 text-black border border-gray-100/50">
-                      {logo.content}
-                    </div>
-                  ) : (
-                    <img src={logo.src} alt={logo.alt} className={`${logo.h} w-auto object-contain transition-transform duration-500`} />
-                  )}
-                </div>
-             ))}
-          </div>
-        </div>
-
-        <h1 className="hero-title text-4xl sm:text-5xl md:text-[76px] font-bold leading-[1.05] mb-6 font-spline tracking-[-0.03em] max-w-4xl text-black">
-          {t("hero.headline")}
-        </h1>
-
-        <p className="hero-sub text-lg md:text-[21px] text-gray-500 font-medium mb-10 max-w-2xl leading-relaxed">
-          {t("hero.subline")}
-        </p>
-
-        <div className="hero-ctas flex flex-col items-center gap-12 mt-4">
-          <div className="flex flex-col items-center gap-6">
-            <Link 
-              href="/design"
-              className="group px-10 py-5 bg-black text-white text-lg font-bold rounded-full hover:bg-gray-800 transition-all active:scale-95 shadow-2xl shadow-black/20 flex items-center gap-3"
-            >
-              {t("hero.cta")}
-              <span className="group-hover:translate-x-1 transition-transform">→</span>
-            </Link>
-            <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-[13px] font-bold text-gray-400">
-              <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro1")}</span>
-              <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro2")}</span>
-              <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro3")}</span>
-            </div>
-          </div>
-
-          {/* Static Gray Logo Bar */}
-          <div className="w-full pt-12 border-t border-gray-50 flex flex-col items-center">
-            <div className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-10">
-              {t("hero.trust")}
-            </div>
-            <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 grayscale opacity-30">
-              <img src="/logos/volvo.svg" alt="Volvo" className="h-4 md:h-5 w-auto" />
-              <img src="/logos/heineken.svg" alt="Heineken" className="h-6 md:h-7 w-auto" />
-              <img src="/logos/mclaren.svg" alt="McLaren" className="h-3.5 md:h-4 w-auto" />
-              <img src="/logos/oakley.svg" alt="Oakley" className="h-6 md:h-7 w-auto" />
-              <img src="/logos/adidas.svg" alt="Adidas" className="h-6 md:h-7 w-auto" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Scroll 2: Decoupled 3D Showcase */}
-      <section ref={showcaseRef} className="relative h-[400vh] bg-white showcase-section">
-        <div className="sticky top-0 h-screen w-full flex flex-col md:flex-row items-center px-6 md:px-24 overflow-hidden py-24 md:py-0">
+        {/* Persistent Sticky Layer */}
+        <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
           
-          {/* Left: 3D Model */}
-          <div className="flex-1 w-full h-[50vh] md:h-screen relative flex items-center justify-center">
-            {/* @ts-ignore */}
-            <model-viewer
-              src="/3d/model.glb"
-              poster="/3d/poster.png"
-              alt="Airdome 3D Model"
-              auto-rotate
-              shadow-intensity="1"
-              exposure="1"
-              interaction-prompt="none"
-              camera-orbit="45deg 75deg 105%"
-              style={{ width: '110%', height: '110%', backgroundColor: 'transparent' }}
-              loading="eager"
-              class="w-full h-full"
-            />
+          {/* 3D Model: Persistent across transition */}
+          <div className="sticky-3d-model absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+            <div className="model-container w-full h-full max-w-[800px] flex items-center justify-center transform-gpu opacity-0 scale-[0.85] translate-y-[80vh]">
+              {/* @ts-ignore */}
+              <model-viewer
+                src="/3d/model.glb"
+                poster="/3d/poster.png"
+                alt="Airdome 3D Model"
+                auto-rotate
+                shadow-intensity="1"
+                exposure="1"
+                interaction-prompt="none"
+                camera-orbit="45deg 75deg 105%"
+                style={{ width: '100%', height: '100%', backgroundColor: 'transparent' }}
+                loading="eager"
+                className="w-full h-full"
+              />
+            </div>
           </div>
 
-          {/* Right: Sequential Steps */}
-          <div className="flex-1 w-full h-full relative flex flex-col justify-center items-start lg:pl-24">
-            <div className="step-1 absolute inset-0 flex flex-col justify-center opacity-0 translate-y-8">
-              <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 01</div>
-              <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
-                {t("how.step1.title")}
-              </h2>
-              <p className="text-lg md:text-xl text-gray-500 font-medium max-w-md leading-relaxed">
-                {t("how.step1.desc")}
-              </p>
+          {/* Hero Content Layer */}
+          <div className="hero-content-layer relative z-30 w-full h-full flex flex-col items-center justify-center text-center px-6">
+            <div className="trusted-by w-full max-w-5xl mb-12">
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-6">
+                {t("hero.trust")}
+              </div>
+              <div className="relative h-12 flex justify-center items-center">
+                 {[
+                   { src: "/logos/volvo.svg", alt: "Volvo", h: "h-5 md:h-6" },
+                   { src: "/logos/heineken.svg", alt: "Heineken", h: "h-7 md:h-8" },
+                   { src: "/logos/mclaren.svg", alt: "McLaren", h: "h-4 md:h-5" },
+                   { src: "/logos/oakley.svg", alt: "Oakley", h: "h-7 md:h-8" },
+                   { src: "/logos/adidas.svg", alt: "Adidas", h: "h-7 md:h-8" },
+                   { type: "text", content: "+1,500 brands" }
+                 ].map((logo, i) => (
+                    <div key={i} className="logo-item absolute inset-0 flex items-center justify-center opacity-0 overflow-hidden">
+                      {logo.type === "text" ? (
+                        <div className="text-[12px] md:text-sm font-bold bg-gray-50 rounded-full px-5 py-2 text-black border border-gray-100/50">
+                          {logo.content}
+                        </div>
+                      ) : (
+                        <img src={logo.src} alt={logo.alt} className={`${logo.h} w-auto object-contain transition-transform duration-500`} />
+                      )}
+                    </div>
+                 ))}
+              </div>
             </div>
 
-            <div className="step-2 absolute inset-0 flex flex-col justify-center opacity-0 translate-y-8">
-              <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 02</div>
-              <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
-                {t("how.step2.title")}
-              </h2>
-              <p className="text-lg md:text-xl text-gray-500 font-medium max-w-md leading-relaxed">
-                {t("how.step2.desc")}
-              </p>
-            </div>
+            <h1 className="hero-title text-4xl sm:text-5xl md:text-[76px] font-bold leading-[1.05] mb-6 font-spline tracking-[-0.03em] max-w-4xl text-black">
+              {t("hero.headline")}
+            </h1>
 
-            <div className="step-3 absolute inset-0 flex flex-col justify-center opacity-0 translate-y-8">
-              <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 03</div>
-              <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
-                {t("how.step3.title")}
-              </h2>
-              <p className="text-lg md:text-xl text-gray-500 font-medium max-w-md leading-relaxed">
-                {t("how.step3.desc")}
-              </p>
-              <Link 
-                href="/design"
-                className="mt-10 px-8 py-4 bg-black text-white font-bold rounded-full w-fit hover:bg-gray-800 transition-all active:scale-95"
-              >
-                {t("hero.cta")}
-              </Link>
+            <p className="hero-sub text-lg md:text-[21px] text-gray-500 font-medium mb-10 max-w-2xl leading-relaxed">
+              {t("hero.subline")}
+            </p>
+
+            <div className="hero-ctas flex flex-col items-center gap-12 mt-4">
+              <div className="flex flex-col items-center gap-6">
+                <Link 
+                  href="/design"
+                  className="group px-10 py-5 bg-black text-white text-lg font-bold rounded-full hover:bg-gray-800 transition-all active:scale-95 shadow-2xl shadow-black/20 flex items-center gap-3"
+                >
+                  {t("hero.cta")}
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </Link>
+                <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-[13px] font-bold text-gray-400">
+                  <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro1")}</span>
+                  <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro2")}</span>
+                  <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro3")}</span>
+                </div>
+              </div>
+
+              {/* Static Gray Logo Bar */}
+              <div className="w-full pt-12 border-t border-gray-50 flex flex-col items-center">
+                <div className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-10">
+                  {t("hero.trust")}
+                </div>
+                <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 grayscale opacity-30">
+                  <img src="/logos/volvo.svg" alt="Volvo" className="h-4 md:h-5 w-auto" />
+                  <img src="/logos/heineken.svg" alt="Heineken" className="h-6 md:h-7 w-auto" />
+                  <img src="/logos/mclaren.svg" alt="McLaren" className="h-3.5 md:h-4 w-auto" />
+                  <img src="/logos/oakley.svg" alt="Oakley" className="h-6 md:h-7 w-auto" />
+                  <img src="/logos/adidas.svg" alt="Adidas" className="h-6 md:h-7 w-auto" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Showcase Steps Layer (Revealed on Right) */}
+          <div className="showcase-steps-layer absolute inset-0 flex items-center px-6 md:px-24 pointer-events-none z-40">
+            <div className="flex-1 hidden md:block" /> {/** Spacer for Left 3D side **/}
+            <div className="flex-1 relative h-full flex flex-col justify-center items-start lg:pl-24 pointer-events-auto">
+              <div className="step-1 absolute inset-0 flex flex-col justify-center opacity-0 translate-y-8">
+                <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 01</div>
+                <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
+                  {t("how.step1.title")}
+                </h2>
+                <p className="text-lg md:text-xl text-gray-500 font-medium max-w-md leading-relaxed">
+                  {t("how.step1.desc")}
+                </p>
+              </div>
+
+              <div className="step-2 absolute inset-0 flex flex-col justify-center opacity-0 translate-y-8">
+                <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 02</div>
+                <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
+                  {t("how.step2.title")}
+                </h2>
+                <p className="text-lg md:text-xl text-gray-500 font-medium max-w-md leading-relaxed">
+                  {t("how.step2.desc")}
+                </p>
+              </div>
+
+              <div className="step-3 absolute inset-0 flex flex-col justify-center opacity-0 translate-y-8">
+                <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 03</div>
+                <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
+                  {t("how.step3.title")}
+                </h2>
+                <p className="text-lg md:text-xl text-gray-500 font-medium max-w-md leading-relaxed">
+                  {t("how.step3.desc")}
+                </p>
+                <Link 
+                  href="/design"
+                  className="mt-10 px-8 py-4 bg-black text-white font-bold rounded-full w-fit hover:bg-gray-800 transition-all active:scale-95"
+                >
+                  {t("hero.cta")}
+                </Link>
+              </div>
             </div>
           </div>
 
         </div>
-      </section>
+      </div>
 
       {/* Scroll 1: ROI Framing */}
       <section className="py-24 px-6 max-w-7xl mx-auto flex flex-col lg:flex-row items-start gap-16 lg:gap-24">
@@ -359,26 +348,38 @@ export default function LandingPage() {
       </section>
 
       {/* Scroll 4: Final CTA */}
-      <section className="py-32 px-6 bg-[#0A0A0A] flex flex-col items-center text-center">
-        <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-8">
-          {t("final.eyebrow")}
+      <section className="relative py-32 md:py-48 px-6 bg-[#0A0A0A] flex flex-col items-center text-center overflow-hidden">
+        {/* Subtle Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/images/Good-Year-1024x884.jpg" 
+            alt="Goodyear Airdome" 
+            className="w-full h-full object-cover opacity-[0.15] grayscale"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A] via-transparent to-[#0A0A0A]" />
         </div>
-        <h2 className="text-4xl sm:text-5xl md:text-[64px] font-bold leading-[1.1] mb-8 font-spline tracking-[-0.03em] max-w-3xl text-white">
-          {t("final.headline")}
-        </h2>
-        <p className="text-lg md:text-[21px] text-gray-400 font-medium mb-12 max-w-2xl leading-relaxed">
-          {t("final.subline")}
-        </p>
-        <Link 
-          href="/design"
-          className="inline-flex items-center justify-center px-12 py-5 bg-white text-black text-[16px] md:text-[18px] font-bold rounded-2xl hover:bg-gray-100 transition-all active:scale-95 shadow-xl shadow-white/5"
-        >
-          {t("hero.cta")}
-        </Link>
-        <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm text-gray-500 font-semibold">
-          <span className="flex items-center gap-2">✓ {t("hero.micro1")}</span>
-          <span className="flex items-center gap-2">✓ {t("hero.micro2")}</span>
-          <span className="flex items-center gap-2">✓ {t("hero.micro3")}</span>
+
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-8">
+            {t("final.eyebrow")}
+          </div>
+          <h2 className="text-4xl sm:text-5xl md:text-[64px] font-bold leading-[1.1] mb-8 font-spline tracking-[-0.03em] max-w-3xl text-white">
+            {t("final.headline")}
+          </h2>
+          <p className="text-lg md:text-[21px] text-gray-400 font-medium mb-12 max-w-2xl leading-relaxed">
+            {t("final.subline")}
+          </p>
+          <Link 
+            href="/design"
+            className="inline-flex items-center justify-center px-12 py-5 bg-white text-black text-[16px] md:text-[18px] font-bold rounded-2xl hover:bg-gray-100 transition-all active:scale-95 shadow-xl shadow-white/5"
+          >
+            {t("hero.cta")}
+          </Link>
+          <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm text-gray-500 font-semibold">
+            <span className="flex items-center gap-2">✓ {t("hero.micro1")}</span>
+            <span className="flex items-center gap-2">✓ {t("hero.micro2")}</span>
+            <span className="flex items-center gap-2">✓ {t("hero.micro3")}</span>
+          </div>
         </div>
       </section>
 
