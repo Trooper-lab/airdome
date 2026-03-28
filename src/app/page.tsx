@@ -46,8 +46,10 @@ export default function LandingPage() {
           }
         });
 
-        mainTl.to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 }, 0)
+        mainTl.to(".hero-massive-text h2", { opacity: 0.05, duration: 1.5 }, 0)
+              .to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 }, 0)
               .to(".hero-content-layer", { opacity: 0, y: -150, duration: 1.5 }, 0.2)
+              .to(".hero-massive-text h2", { opacity: 0, y: -200, scale: 1.2, duration: 2 }, 0.5)
               .to(".sticky-3d-model", { xPercent: -25, duration: 1.5 }, 2.0)
               .to(".step-1", { opacity: 1, y: 0, duration: 1 }, 3.5)
               .to(".step-1", { opacity: 0, y: -30, duration: 1, delay: 0.5 })
@@ -68,8 +70,10 @@ export default function LandingPage() {
         });
 
         // Small screen: Rise, but stay centered horizontally. Shift UP slightly so text fits below.
-        mobTl.to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 }, 0)
+        mobTl.to(".hero-massive-text h2", { opacity: 0.05, duration: 1.5 }, 0)
+             .to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 }, 0)
              .to(".hero-content-layer", { opacity: 0, y: -150, duration: 1.5 }, 0.2)
+             .to(".hero-massive-text h2", { opacity: 0, y: -200, scale: 1.2, duration: 2 }, 0.5)
              .to(".sticky-3d-model", { yPercent: -20, duration: 1.5 }, 2.0) 
              .to(".step-1", { opacity: 1, y: 0, duration: 1 }, 3.5)
              .to(".step-1", { opacity: 0, y: -30, duration: 1, delay: 0.5 })
@@ -96,7 +100,8 @@ export default function LandingPage() {
     // ENTRANCE ANIMATIONS (Non-scroll)
     const entTl = gsap.timeline({ defaults: { ease: "power4.out" } });
     entTl.to(".nav-pill", { y: 0, opacity: 1, duration: 1, delay: 0.2 })
-         .to(".trusted-by", { opacity: 1, duration: 1 }, "-=0.6")
+         .to(".hero-massive-text h2", { opacity: 0.08, duration: 1.5, scale: 1.05 }, "-=0.8")
+         .to(".trusted-by", { opacity: 1, duration: 1 }, "-=1.0")
          .to(".hero-title", { y: 0, opacity: 1, duration: 1 }, "-=0.8")
          .to(".hero-sub", { y: 0, opacity: 1, duration: 1 }, "-=0.8")
          .to(".hero-ctas", { y: 0, opacity: 1, duration: 1 }, "-=0.8");
@@ -148,6 +153,13 @@ export default function LandingPage() {
         
         {/* Persistent Sticky Layer */}
         <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
+          
+          {/* Background Massive Text */}
+          <div className="hero-massive-text absolute top-[15%] left-0 w-full flex justify-center pointer-events-none z-10 select-none">
+            <h2 className="font-syne font-extrabold text-[12vw] sm:text-[15vw] leading-none text-black tracking-[-0.04em] uppercase opacity-0">
+              Airdome<span className="text-[0.3em] align-top ml-1">®</span>
+            </h2>
+          </div>
           
           {/* 3D Model: Persistent across transition */}
           <div className="sticky-3d-model absolute inset-0 flex items-center justify-center pointer-events-none z-10">
