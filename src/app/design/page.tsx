@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ToolNav } from "@/components/layout/ToolNav";
 import { ProgressBar } from "@/components/layout/ProgressBar";
 import { Step1_Search } from "@/components/screens/Step1_Search";
@@ -13,6 +14,9 @@ import { Step7_FinalConfig } from "@/components/screens/Step7_FinalConfig";
 import { Step8_Lead } from "@/components/screens/Step8_Lead";
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const initialBrand = searchParams.get("brand") || "";
+
   const [step, setStep] = useState(1);
   const [selections, setSelections] = useState({
     brand: null as any,
@@ -35,7 +39,7 @@ export default function Home() {
   const renderStep = () => {
     switch (step) {
       case 1:
-        return <Step1_Search onComplete={(brand) => updateSelection("brand", brand)} />;
+        return <Step1_Search initialQuery={initialBrand} onComplete={(brand) => updateSelection("brand", brand)} />;
       case 2:
         return <Step2_Personality onContinue={(val) => updateSelection("personality", val)} onBack={prevStep} />;
       case 3:

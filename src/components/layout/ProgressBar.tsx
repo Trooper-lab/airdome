@@ -1,18 +1,27 @@
 "use client";
 
 import React from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface ProgressBarProps {
   currentStep: number;
   totalSteps: number;
 }
 
-const steps = [
-  "Brand", "Style", "Vibe", "Size", "Config", "Setting", "Review", "Submit"
-];
-
 export const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalSteps }) => {
+  const { t } = useLanguage();
   const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+
+  const steps = [
+    t("step.1"), 
+    t("step.2"), 
+    t("step.3"), 
+    t("step.4"), 
+    t("step.5"), 
+    t("step.6"), 
+    t("step.7"), 
+    t("step.8")
+  ];
 
   return (
     <div className="w-full">
@@ -37,7 +46,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalStep
           const isDone = stepNum < currentStep;
 
           return (
-            <div key={label} className="flex flex-col items-center gap-[3px] relative">
+            <div key={index} className="flex flex-col items-center gap-[3px] relative">
               <div 
                 className={`w-1.5 h-1.5 rounded-full transition-all duration-300 
                   ${isDone ? "bg-black border-black" : "bg-line border-line"} 

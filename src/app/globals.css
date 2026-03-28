@@ -46,10 +46,16 @@
   --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 
   --animate-shimmer: shimmer 2s linear infinite;
+  --animate-spin-slow: spin 4s linear infinite;
 
   @keyframes shimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 }
 

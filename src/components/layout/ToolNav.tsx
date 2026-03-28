@@ -12,7 +12,7 @@ interface ToolNavProps {
 }
 
 const stepsKeys = [
-  "step.brand", "step.style", "step.size", "step.config", "step.events", "step.usage", "step.urgency", "step.contact"
+  "step.1", "step.2", "step.3", "step.4", "step.5", "step.6", "step.7", "step.8"
 ];
 
 export const ToolNav: React.FC<ToolNavProps> = ({ currentStep, onStepClick }) => {

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -16,6 +17,18 @@ export default function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const showcaseRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
+  const router = useRouter();
+  const [brandQuery, setBrandQuery] = useState("");
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  const handleFetchBrand = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!brandQuery.trim()) return;
+    
+    setIsRedirecting(true);
+    // Navigate to design tool with the brand query as a URL parameter
+    router.push(`/design?brand=${encodeURIComponent(brandQuery.trim())}`);
+  };
 
   useGSAP(() => {
     // CINEMATIC HERO-TO-SHOWCASE TRANSITION
@@ -137,8 +150,8 @@ export default function LandingPage() {
         <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
           
           {/* 3D Model: Persistent across transition */}
-          <div className="sticky-3d-model absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-            <div className="model-container w-full h-full max-w-[800px] flex items-center justify-center transform-gpu opacity-0 scale-[0.85] translate-y-[80vh]">
+          <div className="sticky-3d-model absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            <div className="model-container w-full h-full max-w-[800px] flex items-center justify-center transform-gpu opacity-0 scale-[0.85] translate-y-[80vh] z-0">
               {/* @ts-ignore */}
               <model-viewer
                 src="/3d/model.glb"
@@ -157,7 +170,7 @@ export default function LandingPage() {
           </div>
 
           {/* Hero Content Layer */}
-          <div className="hero-content-layer relative z-30 w-full h-full flex flex-col items-center justify-center text-center px-6">
+          <div className="hero-content-layer relative z-[50] w-full h-full flex flex-col items-center justify-center text-center px-6">
             <div className="trusted-by opacity-0 w-full max-w-5xl mb-12">
               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-6">
                 {t("hero.trust")}
@@ -192,19 +205,60 @@ export default function LandingPage() {
               {t("hero.subline")}
             </p>
 
-            <div className="hero-ctas opacity-0 translate-y-5 flex flex-col items-center gap-12 mt-4">
-              <div className="flex flex-col items-center gap-6">
-                <Link 
-                  href="/design"
-                  className="group px-10 py-5 bg-black text-white text-lg font-bold rounded-full hover:bg-gray-800 transition-all active:scale-95 shadow-2xl shadow-black/20 flex items-center gap-3"
-                >
-                  {t("hero.cta")}
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                </Link>
-                <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-[13px] font-bold text-gray-400">
-                  <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro1")}</span>
-                  <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro2")}</span>
-                  <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> {t("hero.micro3")}</span>
+            <div className="hero-ctas opacity-0 translate-y-5 flex flex-col items-center gap-12 mt-4 w-full">
+              <div className="flex flex-col items-center gap-8 w-full max-w-[540px]">
+                
+                {/* Glow only for Input Field */}
+                <div className="relative w-full group">
+                  <div className="absolute inset-[-20px] bg-accent/20 rounded-full blur-[60px] opacity-40 animate-pulse pointer-events-none" />
+                  <div className="absolute inset-[-1px] rounded-[25px] overflow-hidden pointer-events-none opacity-40">
+                    <div className="absolute inset-[-200%] bg-[conic-gradient(from_0deg,transparent_25%,rgba(0,242,255,0.8)_50%,transparent_75%)] animate-spin-slow" />
+                  </div>
+
+                  <form 
+                    onSubmit={handleFetchBrand}
+                    className="w-full relative z-[60] flex items-center bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] overflow-hidden focus-within:border-black focus-within:shadow-[0_25px_60px_rgba(0,0,0,0.12)] transition-all duration-500"
+                  >
+                    <div className="absolute left-6 text-gray-300 group-focus-within:text-black transition-colors pointer-events-none">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                      </svg>
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder={t("design.s1.placeholder") as string || "Enter your brand or website..."}
+                      value={brandQuery}
+                      onChange={(e) => setBrandQuery(e.target.value)}
+                      className="w-full pl-[60px] pr-[140px] py-[22px] bg-transparent outline-none font-spline text-[16px] md:text-[18px] font-medium text-black placeholder:text-gray-300"
+                    />
+                    <button 
+                      type="submit"
+                      disabled={!brandQuery.trim() || isRedirecting}
+                      className="absolute right-2 px-6 py-3.5 bg-black text-white text-[13px] font-bold uppercase tracking-widest rounded-2xl hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+                    >
+                      {isRedirecting ? (
+                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        t("design.s1.scan") || "Fetch"
+                      )}
+                    </button>
+                  </form>
+                </div>
+
+                {/* Monochrome USPs below the Input */}
+                <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mt-2">
+                  {[t("hero.micro1"), t("hero.micro2"), t("hero.micro3")].map((usp, idx) => (
+                    <div key={idx} className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-gray-100 bg-white shadow-sm transition-all hover:scale-105 group/usp">
+                      <div className="w-3.5 h-3.5 rounded-full bg-black flex items-center justify-center">
+                        <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-black opacity-70 group-hover/usp:opacity-100 transition-opacity whitespace-nowrap">
+                        {usp}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -225,10 +279,10 @@ export default function LandingPage() {
           </div>
 
           {/* Showcase Steps Layer (Revealed on Right) */}
-          <div className="showcase-steps-layer absolute inset-0 flex items-center px-6 md:px-24 pointer-events-none z-40">
+          <div className="showcase-steps-layer absolute inset-0 flex items-center px-6 md:px-24 pointer-events-none z-[80]">
             <div className="flex-1 hidden md:block" /> {/** Spacer for Left 3D side **/}
-            <div className="flex-1 relative h-full flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 items-start lg:pl-24 pointer-events-auto">
-              <div className="step-1 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8">
+            <div className="flex-1 relative h-full flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 items-start lg:pl-24 pointer-events-auto z-[90]">
+              <div className="step-1 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8 z-[91]">
                 <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 01</div>
                 <div className="flex items-start gap-4 mb-6">
                   <div className="mt-1.5 shrink-0 w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center">
@@ -246,7 +300,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="step-2 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8">
+              <div className="step-2 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8 z-[92]">
                 <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 02</div>
                 <div className="flex items-start gap-4 mb-6">
                   <div className="mt-1.5 shrink-0 w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center">
@@ -263,7 +317,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="step-3 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8">
+              <div className="step-3 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8 z-[93]">
                 <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 03</div>
                 <div className="flex items-start gap-4 mb-6">
                   <div className="mt-1.5 shrink-0 w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center">
@@ -278,12 +332,14 @@ export default function LandingPage() {
                 <p className="text-lg md:text-xl text-gray-500 font-medium max-w-md leading-relaxed">
                   {t("how.step3.desc")}
                 </p>
-                <Link 
-                  href="/design"
-                  className="mt-10 px-8 py-4 bg-black text-white font-bold rounded-full w-fit hover:bg-gray-800 transition-all active:scale-95"
-                >
-                  {t("hero.cta")}
-                </Link>
+                <div className="relative mt-10 z-[100]">
+                  <Link 
+                    href="/design"
+                    className="flex px-12 py-5 bg-black text-white font-bold rounded-full w-fit hover:bg-gray-800 transition-all active:scale-95 shadow-2xl relative"
+                  >
+                    {t("hero.cta")}
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

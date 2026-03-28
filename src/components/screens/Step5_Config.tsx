@@ -7,12 +7,11 @@ import Image from "next/image";
 
 // 0 walls → 5.png (fully enclosed), images 0–5 + luifel
 const TENT_IMAGES = [
-  "/tenttypes/0.png",  // w0 — 0 walls (open)
-  "/tenttypes/1.png",  // w1 — 1 wall
-  "/tenttypes/2.png",  // w2 — 2 walls
-  "/tenttypes/3.png",  // w3 — 3 walls
-  "/tenttypes/4.png",  // w4 — 4 walls (almost closed)
-  "/tenttypes/5.png",  // w4 fully closed variant
+  "/tenttypes/1.png",  // Index 0: 0 walls (Image 1 in user list)
+  "/tenttypes/2.png",  // Index 1: 1 wall  (Image 2 in user list)
+  "/tenttypes/3.png",  // Index 2: 2 walls
+  "/tenttypes/4.png",  // Index 3: 4 walls (Image 3 in user list)
+  "/tenttypes/5.png",  // Index 4: Fully closed (Image 5 in user list)
 ];
 
 const LUIFEL_IMAGE = "/tenttypes/luifel.png";
@@ -78,7 +77,7 @@ export const Step5_Config: React.FC<{
     { id: "w1", name: t("design.s5.w1") as string, hint: t("design.s5.w1.hint") as string, image: TENT_IMAGES[1] },
     { id: "w2", name: t("design.s5.w2") as string, hint: t("design.s5.w2.hint") as string, image: TENT_IMAGES[2] },
     { id: "w3", name: t("design.s5.w3") as string, hint: t("design.s5.w3.hint") as string, image: TENT_IMAGES[3] },
-    { id: "w4", name: t("design.s5.w4") as string, hint: t("design.s5.w4.hint") as string, image: TENT_IMAGES[5] },
+    { id: "w4", name: t("design.s5.w4") as string, hint: t("design.s5.w4.hint") as string, image: TENT_IMAGES[4] },
   ];
 
   const handleContinue = () => {

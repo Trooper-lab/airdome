@@ -7,6 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Step1Props {
   onComplete: (brandData: any) => void;
+  initialQuery?: string;
 }
 
 interface BrandDetails {
@@ -73,8 +74,8 @@ const ColorSwatch: React.FC<{
 };
 
 // ─── Main Component ────────────────────────────────────────────────────────────
-export const Step1_Search: React.FC<Step1Props> = ({ onComplete }) => {
-  const [query, setQuery] = useState("");
+export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = "" }) => {
+  const [query, setQuery] = useState(initialQuery);
   const [isScanning, setIsScanning] = useState(false);
   const [showLogoFound, setShowLogoFound] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
@@ -96,6 +97,11 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete }) => {
       { opacity: 0, y: 15 },
       { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power3.out" }
     );
+
+    // Auto-scan if initialQuery was provided from landing page
+    if (initialQuery) {
+      handleScan(initialQuery);
+    }
   }, { scope: containerRef });
 
   useGSAP(() => {
@@ -124,8 +130,9 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete }) => {
     }
   };
 
-  const handleScan = () => {
-    if (!query.trim()) return;
+  const handleScan = (forcedQuery?: string) => {
+    const scanQuery = forcedQuery || query;
+    if (!scanQuery.trim()) return;
     setIsScanning(true);
     setShowLogoFound(false);
     setShowFallback(false);
@@ -134,8 +141,8 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete }) => {
     setEditColors([]);
     setUploadError("");
 
-    const isLikelyUrl = query.includes('.') || query.startsWith('http');
-    const domain = isLikelyUrl ? extractDomain(query) : `${query.toLowerCase().trim().replace(/\s+/g, '')}.com`;
+    const isLikelyUrl = scanQuery.includes('.') || scanQuery.startsWith('http');
+    const domain = isLikelyUrl ? extractDomain(scanQuery) : `${scanQuery.toLowerCase().trim().replace(/\s+/g, '')}.com`;
 
     fetch(`/api/brand?domain=${encodeURIComponent(domain)}`)
       .then(async res => {
@@ -231,64 +238,89 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete }) => {
         {t("design.s1.subtitle")}
       </p>
 
-      {/* Search Bar */}
-      <div className="gsap-initial-reveal w-full max-w-[580px] mb-8 opacity-0">
-        <label htmlFor="brand-search" className="sr-only">Search Brand</label>
-        <div className={`relative flex items-center group overflow-hidden rounded-[24px] bg-white border-[1.5px] border-line shadow-[0_4px_20px_rgba(17,17,16,0.04)] focus-within:border-black focus-within:shadow-[0_8px_30px_rgba(17,17,16,0.12)] transition-all ${isScanning ? 'animate-pulse pointer-events-none' : ''}`}>
-          {isScanning && (
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/[0.03] to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
-          )}
-          <div className="absolute left-[24px] z-10 text-gray2 group-focus-within:text-black transition-colors">
-            {isScanning ? (
-              <div className="w-5 h-5 border-[2.5px] border-black border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-            )}
-          </div>
-          <input
-            id="brand-search"
-            type="text"
-            placeholder={t("design.s1.placeholder") as string}
-            className="w-full pl-[64px] pr-[140px] py-[22px] bg-transparent outline-none font-syne text-[17px] font-medium text-black placeholder:text-gray2/60"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleScan()}
-          />
-          <div className="absolute right-2 flex items-center gap-2">
-            {query && !isScanning && (
-              <button 
-                onClick={() => setQuery("")}
-                className="w-10 h-10 flex items-center justify-center text-gray2 hover:text-black transition-colors rounded-full hover:bg-off"
-                title="Clear"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            )}
-            <button
-              onClick={handleScan}
-              disabled={!query.trim() || isScanning}
-              className={`flex items-center justify-center transition-all ${showLogoFound ? 'w-12 h-12 bg-off text-gray hover:text-black hover:bg-line rounded-full' : 'px-6 py-3 bg-black text-white font-syne font-bold text-[11px] tracking-widest uppercase rounded-full hover:bg-zinc-800 disabled:opacity-30'}`}
-              title={showLogoFound ? "Refresh / Rescan" : "Fetch"}
-            >
-              {showLogoFound ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={isScanning ? 'animate-spin' : ''}>
-                  <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                </svg>
-              ) : (
-                t("design.s1.scan") || "Fetch"
+      {/* Glow + Input & USPs section (always show) */}
+      <div className="gsap-initial-reveal w-full max-w-[580px] flex flex-col items-center gap-10 mt-4 opacity-0">
+          
+          {/* Search Bar with Glow */}
+          <div className="relative w-full group">
+            {/* Glow effect */}
+            <div className="absolute inset-[-20px] bg-accent/20 rounded-full blur-[60px] opacity-40 animate-pulse pointer-events-none" />
+            <div className="absolute inset-[-1px] rounded-[25px] overflow-hidden pointer-events-none opacity-40">
+              <div className="absolute inset-[-200%] bg-[conic-gradient(from_0deg,transparent_25%,rgba(0,242,255,0.8)_50%,transparent_75%)] animate-spin-slow" />
+            </div>
+
+            <div className={`relative z-[60] flex items-center bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] overflow-hidden focus-within:border-black focus-within:shadow-[0_25px_60px_rgba(0,0,0,0.12)] transition-all duration-500 ${isScanning ? 'animate-pulse pointer-events-none' : ''}`}>
+              {isScanning && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/[0.03] to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
               )}
-            </button>
+              <div className="absolute left-6 text-gray-300 group-focus-within:text-black transition-colors pointer-events-none">
+                {isScanning ? (
+                  <div className="w-5 h-5 border-[2.5px] border-black border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                )}
+              </div>
+              <input
+                id="brand-search"
+                type="text"
+                placeholder={t("design.s1.placeholder") as string || "Enter your brand or website..."}
+                className="w-full pl-[60px] pr-[140px] py-[22px] bg-transparent outline-none font-spline text-[16px] md:text-[18px] font-medium text-black placeholder:text-gray-300"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleScan()}
+              />
+              <div className="absolute right-2 flex items-center gap-2">
+                {query && !isScanning && (
+                  <button 
+                    onClick={() => setQuery("")}
+                    className="w-10 h-10 flex items-center justify-center text-gray2 hover:text-black transition-colors rounded-full hover:bg-off"
+                    title="Clear"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                )}
+                <button
+                  onClick={() => handleScan()}
+                  disabled={!query.trim() || isScanning}
+                  className={`flex items-center justify-center transition-all ${showLogoFound ? 'w-12 h-12 bg-off text-gray hover:text-black hover:bg-line rounded-full' : 'px-6 py-3 bg-black text-white font-spline font-bold text-[13px] tracking-widest uppercase rounded-2xl hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-30'}`}
+                  title={showLogoFound ? "Refresh / Rescan" : "Fetch"}
+                >
+                  {showLogoFound ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={isScanning ? 'animate-spin' : ''}>
+                      <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    </svg>
+                  ) : (
+                    t("design.s1.scan") || "Fetch"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Monochrome USPs below the Input */}
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mt-2">
+            {[t("hero.micro1"), t("hero.micro2"), t("hero.micro3")].map((usp, idx) => (
+              <div key={idx} className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-gray-100 bg-white shadow-sm transition-all hover:scale-105 group/usp">
+                <div className="w-3.5 h-3.5 rounded-full bg-black flex items-center justify-center">
+                  <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-black opacity-70 group-hover/usp:opacity-100 transition-opacity whitespace-nowrap">
+                  {usp}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
 
       {/* Scanning Indicator — High Fidelity */}
       {isScanning && (
-        <div className="gsap-result-reveal flex flex-col items-center gap-4 opacity-0 mb-8">
+        <div className="gsap-result-reveal flex flex-col items-center gap-4 opacity-0 mb-8 mt-12">
           <div className="relative w-48 h-[2px] bg-off rounded-full overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black to-transparent w-1/2 animate-[shimmer_1.5s_infinite]" />
           </div>
@@ -303,7 +335,7 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete }) => {
 
       {/* ─── Result: Brand Identity Card ─────────────────────────────────── */}
       {showLogoFound && brandDetails && (
-        <div className="gsap-result-reveal w-full max-w-[540px] bg-white border border-line rounded-[24px] p-8 mb-10 shadow-[0_12px_40px_rgba(17,17,16,0.08)] opacity-0 text-left relative overflow-hidden group/card">
+        <div className="gsap-result-reveal w-full max-w-[540px] bg-white border border-line rounded-[24px] p-8 mb-10 mt-12 shadow-[0_12px_40px_rgba(17,17,16,0.08)] opacity-0 text-left relative overflow-hidden group/card">
           {/* Success Glow */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-green-500/5 blur-[80px] rounded-full" />
           
@@ -433,21 +465,6 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete }) => {
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
           </button>
-        </div>
-      )}
-
-      {/* Trust Section */}
-      {!isDataComplete && !isScanning && (
-        <div className="gsap-initial-reveal w-full mt-[60px] border-t border-line opacity-0">
-          <div className="flex flex-col items-center gap-3.5 py-7 px-6 border-b border-line">
-            <span className="text-[9px] tracking-[0.25em] text-gray2 uppercase">{t("design.s1.trusted")}</span>
-            <div className="flex gap-10 items-center flex-wrap justify-center opacity-40 grayscale">
-              <span className="font-syne font-bold text-xs tracking-widest text-[#BEBAB2] uppercase">Red Bull</span>
-              <span className="font-syne font-bold text-xs tracking-widest text-[#BEBAB2] uppercase">BMW Group</span>
-              <span className="font-syne font-bold text-xs tracking-widest text-[#BEBAB2] uppercase">Spotify</span>
-              <span className="font-syne font-bold text-xs tracking-widest text-[#BEBAB2] uppercase">Nike</span>
-            </div>
-          </div>
         </div>
       )}
     </div>
