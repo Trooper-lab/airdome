@@ -3,6 +3,7 @@
 import React, { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface QuestionScreenProps {
   phase: string;
@@ -10,6 +11,7 @@ interface QuestionScreenProps {
   subtitle?: string;
   children: React.ReactNode;
   onContinue: () => void;
+  onBack?: () => void;
   canContinue: boolean;
   buttonLabel?: string;
   hideButton?: boolean;
@@ -21,11 +23,16 @@ export const QuestionScreen: React.FC<QuestionScreenProps> = ({
   subtitle,
   children,
   onContinue,
+  onBack,
   canContinue,
-  buttonLabel = "Continue",
+  buttonLabel,
   hideButton = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
+
+  const finalButtonLabel = buttonLabel || (t("design.nav.continue") as string || t("design.s1.button") as string || "Continue");
+  const backLabel = buttonLabel === "Continue" ? t("design.nav.back") : t("design.nav.previous");
 
   useGSAP(() => {
     // Initial hidden state for the container to prevent FOUC is handled by setting opacity 0 below
@@ -59,16 +66,30 @@ export const QuestionScreen: React.FC<QuestionScreenProps> = ({
       </div>
 
       {!hideButton && (
-        <button
-          onClick={onContinue}
-          disabled={!canContinue}
-          className="gsap-reveal inline-flex items-center gap-[10px] px-9 py-[15px] bg-black text-white font-syne font-bold text-[11px] tracking-widest uppercase border-none rounded-full cursor-pointer shadow-[0_2px_8px_rgba(17,17,16,0.15)] mt-8 hover:translate-y-[-1px] hover:shadow-[0_4px_16px_rgba(17,17,16,0.2)] disabled:opacity-25 disabled:cursor-default disabled:transform-none transition-all opacity-0"
-        >
-          {buttonLabel}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
-        </button>
+        <div className="gsap-reveal flex items-center gap-4 mt-8 opacity-0">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="px-6 py-[15px] bg-transparent text-gray2 hover:text-black font-syne font-bold text-[11px] tracking-widest uppercase border-none rounded-full cursor-pointer transition-all flex items-center gap-2 group"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:-translate-x-1">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              {backLabel || "Back"}
+            </button>
+          )}
+
+          <button
+            onClick={onContinue}
+            disabled={!canContinue}
+            className="inline-flex items-center gap-[10px] px-9 py-[15px] bg-black text-white font-syne font-bold text-[11px] tracking-widest uppercase border-none rounded-full cursor-pointer shadow-[0_2px_8px_rgba(17,17,16,0.15)] hover:translate-y-[-1px] hover:shadow-[0_4px_16px_rgba(17,17,16,0.2)] disabled:opacity-25 disabled:cursor-default disabled:transform-none transition-all"
+          >
+            {finalButtonLabel}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
       )}
     </div>
   );

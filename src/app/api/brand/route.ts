@@ -1,100 +1,320 @@
 import { NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Gemini Flash — cheapest vision model, ~$0.000075 per image call
+const genAI = new GoogleGenerativeAI(
+  process.env.GEMINI_API_KEY ||
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
+  ''
+);
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const domain = searchParams.get('domain');
-
-  if (!domain) {
-    return NextResponse.json({ error: 'Domain is required' }, { status: 400 });
-  }
+  if (!domain) return NextResponse.json({ error: 'Domain required' }, { status: 400 });
 
   try {
     const url = domain.startsWith('http') ? domain : `https://${domain}`;
-    
-    // 1. Fetch the HTML to extract brand clues safely from the server
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; AirdomeBot/1.0; +http://airdome.com)'
-      },
-      // Next.js standard fetch doesn't support AbortSignal.timeout directly in all versions, 
-      // but we can just let it timeout naturally or use a simple controller
-    });
-    
-    if (!response.ok) {
-        throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
-    }
+    const urlObj = new URL(url);
+    const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
 
-    const html = await response.text();
-    
-    // 2. Extract title
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    let title = titleMatch ? titleMatch[1].trim() : domain;
-    // Clean up title (remove " - Home" etc)
-    title = title.split('|')[0].split('-')[0].trim();
-    
-    // 3. Extract theme color
-    const themeColorMatch = html.match(/<meta[^>]*name="theme-color"[^>]*content="([^"]+)"[^>]*>/i) || 
-                            html.match(/<meta[^>]*content="([^"]+)"[^>]*name="theme-color"[^>]*>/i);
-    let themeColor = themeColorMatch ? themeColorMatch[1] : null;
-    
-    // 4. Extract apple-touch-icon or shortcut icon
-    let iconUrl = null;
-    const iconMatch = html.match(/<link[^>]*rel="(?:apple-touch-icon|icon|shortcut icon)"[^>]*href="([^"]+)"[^>]*>/i);
-    if (iconMatch) {
-      let rawIcon = iconMatch[1];
-      if (rawIcon.startsWith('//')) {
-        iconUrl = 'https:' + rawIcon;
-      } else if (rawIcon.startsWith('/')) {
-        const urlObj = new URL(url);
-        iconUrl = `${urlObj.protocol}//${urlObj.host}${rawIcon}`;
-      } else if (!rawIcon.startsWith('http')) {
-        const urlObj = new URL(url);
-        iconUrl = `${urlObj.protocol}//${urlObj.host}/${rawIcon}`;
-      } else {
-        iconUrl = rawIcon;
-      }
-    }
-    
-    // Fallback to Google Favicon API if no icon found in HTML
-    if (!iconUrl) {
-      // The larger sizes are more likely to look like a brand logo rather than a tiny 16x16 icon
-      iconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
-    }
-    
-    // Generate some complementary colors based on the theme color or deterministically
-    const defaultColors = themeColor 
-        ? [themeColor, '#111111', '#F4F4F5'] 
-        : getFallbackColors(domain);
+    const html = await fetchHtml(url);
+    const name = extractName(html, domain);
+    const logoUrl = extractLogo(html, baseUrl, domain);
 
-    return NextResponse.json({
-      name: title || domain,
-      logoUrl: iconUrl,
-      colors: defaultColors
-    });
-    
-  } catch (error) {
-    console.error('Error fetching brand domain:', error);
-    // If we fail to fetch (e.g. blocking, timeout), fallback gracefully
-    return NextResponse.json({
-      name: domain.split('.')[0] || domain,
-      logoUrl: `https://www.google.com/s2/favicons?domain=${domain}&sz=256`,
-      colors: getFallbackColors(domain)
-    });
+    // Step 1: Fast CSS scrape for candidates
+    const cssUrls = extractCssUrls(html, baseUrl);
+    const inlineCss = extractInlineStyles(html);
+    const candidates = await scrapeCandidateColors(cssUrls, inlineCss, html);
+
+    // Step 2: AI refinement — Gemini Flash Vision looks at the logo + candidates
+    const colors = await refineColorsWithAI(logoUrl, candidates, name);
+
+    return NextResponse.json({ name, logoUrl, colors, found: true });
+
+  } catch (err: any) {
+    return NextResponse.json({ error: 'Brand not found', found: false }, { status: 404 });
   }
 }
 
-function getFallbackColors(str: string) {
-  // Generate deterministic mock colors based on string characters
-  // This ensures the same domain always gets the same palette!
-  const hash = str.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const palettes = [
-    [ '#000000', '#F4F4F5', '#3B82F6' ],
-    [ '#111111', '#FAFAFA', '#EF4444' ],
-    [ '#222222', '#F3F4F6', '#10B981' ],
-    [ '#000000', '#FFFFFF', '#8B5CF6' ],
-    [ '#111111', '#F8FAFC', '#F59E0B' ],
-    [ '#0A0A0A', '#E5E7EB', '#EC4899' ],
-    [ '#171717', '#FFFFFF', '#06B6D4' ]
-  ];
-  return palettes[hash % palettes.length];
+// ─── FETCH ─────────────────────────────────────────────────────────────────────
+
+async function fetchHtml(url: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
+    },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  if (!text.includes('<')) throw new Error('Not HTML');
+  return text;
+}
+
+async function fetchText(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return '';
+    return (await res.text()).slice(0, 300_000);
+  } catch { return ''; }
+}
+
+// ─── NAME ──────────────────────────────────────────────────────────────────────
+
+function extractName(html: string, domain: string): string {
+  const ogSite = html.match(/property=["']og:site_name["'][^>]*content=["']([^"']{2,60})["']/i)?.[1]
+               || html.match(/content=["']([^"']{2,60})["'][^>]*property=["']og:site_name["']/i)?.[1];
+  const title  = html.match(/<title[^>]*>([^<]{2,80})<\/title>/i)?.[1]?.trim();
+  const name = (ogSite || title || domain).split('|')[0].split(' - ')[0].split(' – ')[0].trim();
+  return name || domain.split('.')[0];
+}
+
+// ─── LOGO ──────────────────────────────────────────────────────────────────────
+
+function resolve(src: string, base: string): string {
+  if (!src) return '';
+  if (src.startsWith('data:')) return src;
+  if (src.startsWith('//')) return 'https:' + src;
+  if (src.startsWith('http')) return src;
+  if (src.startsWith('/')) return base + src;
+  return base + '/' + src;
+}
+
+function extractLogo(html: string, base: string, domain: string): string {
+  const navHtml = html.match(/<(?:header|nav)[\s\S]*?<\/(?:header|nav)>/i)?.[0] || '';
+
+  if (navHtml) {
+    const svgSrc = navHtml.match(/<img[^>]+src=["']([^"']*\.svg[^"']*)["']/i)?.[1];
+    if (svgSrc) return resolve(svgSrc, base);
+    for (const p of [
+      /<img[^>]+src=["']([^"']+)["'][^>]*(?:class|alt|id)=["'][^"']*logo[^"']*["']/i,
+      /<img[^>]*(?:class|alt|id)=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i,
+      /<img[^>]+src=["']([^"']*logo[^"']*)["']/i,
+    ]) {
+      const m = navHtml.match(p);
+      if (m?.[1]) return resolve(m[1], base);
+    }
+  }
+
+  const anyLogo = html.match(/<img[^>]+src=["']([^"']*logo[^"']*\.(?:svg|png|webp)[^"']*)["']/i)?.[1];
+  if (anyLogo) return resolve(anyLogo, base);
+
+  const og = html.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/i)?.[1]
+           || html.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/i)?.[1];
+  if (og) return resolve(og, base);
+
+  const apple = html.match(/<link[^>]*rel=["']apple-touch-icon["'][^>]*href=["']([^"']+)["']/i)?.[1]
+              || html.match(/<link[^>]*href=["']([^"']+)["'][^>]*rel=["']apple-touch-icon["']/i)?.[1];
+  if (apple) return resolve(apple, base);
+
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
+}
+
+// ─── CSS CANDIDATES ────────────────────────────────────────────────────────────
+
+function extractCssUrls(html: string, base: string): string[] {
+  const urls: string[] = [];
+  const re = /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/gi;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const href = resolve(m[1], base);
+    if (href.startsWith('http')) urls.push(href);
+  }
+  return urls.slice(0, 4);
+}
+
+function extractInlineStyles(html: string): string {
+  const blocks: string[] = [];
+  const re = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+  let m;
+  while ((m = re.exec(html)) !== null) blocks.push(m[1]);
+  return blocks.join('\n');
+}
+
+async function scrapeCandidateColors(cssUrls: string[], inlineCss: string, html: string): Promise<string[]> {
+  const externalCss = (await Promise.all(cssUrls.map(fetchText))).join('\n');
+  const allCss = inlineCss + '\n' + externalCss;
+
+  // Frequency map: count every hex color in the CSS
+  const freq = new Map<string, number>();
+  const hexRe = /#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g;
+  let hm;
+  while ((hm = hexRe.exec(allCss)) !== null) {
+    const hex = normalizeHex('#' + hm[1]);
+    if (!hex) continue;
+    freq.set(hex, (freq.get(hex) || 0) + 1);
+  }
+
+  // Also parse rgb/hsl values
+  const rgbRe = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/g;
+  let rm;
+  while ((rm = rgbRe.exec(allCss)) !== null) {
+    const hex = rgbToHex(parseInt(rm[1]), parseInt(rm[2]), parseInt(rm[3]));
+    if (hex) freq.set(hex, (freq.get(hex) || 0) + 1);
+  }
+
+  const hslRe = /hsla?\(\s*([\d.]+)(?:deg)?\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%/g;
+  let sm;
+  while ((sm = hslRe.exec(allCss)) !== null) {
+    const hex = hslToHex(parseFloat(sm[1]), parseFloat(sm[2]), parseFloat(sm[3]));
+    if (hex) freq.set(hex, (freq.get(hex) || 0) + 1);
+  }
+
+  // Meta tags fallback
+  const theme = html.match(/name=["']theme-color["'][^>]*content=["']([^"']+)["']/i)?.[1]
+              || html.match(/content=["']([^"']+)["'][^>]*name=["']theme-color["']/i)?.[1];
+  if (theme) { const c = parseAnyColor(theme); if (c) freq.set(c, (freq.get(c) || 0) + 5); }
+
+  const tile = html.match(/name=["']msapplication-TileColor["'][^>]*content=["']([^"']+)["']/i)?.[1];
+  if (tile)  { const c = parseAnyColor(tile);  if (c) freq.set(c, (freq.get(c) || 0) + 5); }
+
+  // Sort by frequency, filter out boring neutrals
+  return [...freq.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([hex]) => hex)
+    .filter(hex => !isNearNeutral(hex) && !isFrameworkDefault(hex))
+    .slice(0, 20); // give AI up to 20 candidates to choose from
+}
+
+// ─── AI REFINEMENT ─────────────────────────────────────────────────────────────
+
+async function refineColorsWithAI(logoUrl: string, candidates: string[], brandName: string): Promise<string[]> {
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+    const parts: any[] = [];
+
+    // Try to fetch the logo image for vision analysis
+    if (logoUrl && !logoUrl.includes('google.com/s2')) {
+      try {
+        const imgRes = await fetch(logoUrl, { signal: AbortSignal.timeout(4000) });
+        if (imgRes.ok) {
+          const contentType = imgRes.headers.get('content-type') || 'image/png';
+          // Only include if it's an image type gemini supports
+          if (contentType.startsWith('image/') && !contentType.includes('svg')) {
+            const buffer = await imgRes.arrayBuffer();
+            const base64 = Buffer.from(buffer).toString('base64');
+            parts.push({
+              inlineData: { data: base64, mimeType: contentType.split(';')[0] }
+            });
+          }
+        }
+      } catch { /* logo fetch failed, proceed with text only */ }
+    }
+
+    const candidateText = candidates.length > 0
+      ? `CSS candidate colors found on site (sorted by frequency): ${candidates.join(', ')}`
+      : 'No CSS colors extracted.';
+
+    parts.push({
+      text: `You are a brand color expert. I need the 3 primary brand colors for "${brandName}".
+
+${candidateText}
+
+${parts.length > 1 ? 'I have also provided the brand logo image above.' : ''}
+
+Rules:
+- Return ONLY a valid JSON array of exactly 3 hex color strings, e.g. ["#e03232","#1a1a2e","#f5f5f5"]
+- Pick colors that are clearly brand colors (not generic web defaults like Bootstrap blue #007bff, generic gray, pure black #000000 or pure white #ffffff)
+- If the logo image is provided, prioritize colors visible in the logo
+- Prefer chromatic (non-gray) colors for the first 2 slots
+- The 3rd color can be a neutral complement (off-white, light gray, or dark tone)
+- If you cannot confidently determine brand colors, pick the best chromatic candidates from the CSS list
+- Return NOTHING except the JSON array`
+    });
+
+    const result = await model.generateContent({ contents: [{ role: 'user', parts }] });
+    const text = result.response.text().trim();
+
+    // Parse the JSON array from response
+    const match = text.match(/\[[\s\S]*\]/);
+    if (match) {
+      const parsed = JSON.parse(match[0]) as string[];
+      const valid = parsed
+        .filter((c): c is string => typeof c === 'string')
+        .map(c => normalizeHex(c))
+        .filter((c): c is string => c !== null);
+      if (valid.length === 3) return valid;
+      if (valid.length >= 1) {
+        // Pad if needed
+        while (valid.length < 3) valid.push(valid.length === 1 ? '#f5f5f5' : '#e8e4dc');
+        return valid.slice(0, 3);
+      }
+    }
+  } catch (err) {
+    console.error('Gemini color refinement failed:', err);
+  }
+
+  // Fallback: return top 3 from CSS candidates or default palette
+  if (candidates.length >= 3) return candidates.slice(0, 3);
+  if (candidates.length === 1) return [candidates[0], '#f5f5f5', '#e8e4dc'];
+  if (candidates.length === 2) return [candidates[0], candidates[1], '#f0ede8'];
+  return ['#1a1a2e', '#e94560', '#f5f5f5'];
+}
+
+// ─── COLOR UTILS ───────────────────────────────────────────────────────────────
+
+function normalizeHex(raw: string): string | null {
+  if (!raw) return null;
+  const hex3 = raw.match(/^#([0-9a-f]{3})$/i);
+  if (hex3) {
+    const h = hex3[1];
+    return ('#' + h[0]+h[0] + h[1]+h[1] + h[2]+h[2]).toLowerCase();
+  }
+  const hex6 = raw.match(/^#([0-9a-f]{6})$/i);
+  if (hex6) return ('#' + hex6[1]).toLowerCase();
+  return null;
+}
+
+function rgbToHex(r: number, g: number, b: number): string | null {
+  if ([r,g,b].some(v => v < 0 || v > 255)) return null;
+  return '#' + [r,g,b].map(n => n.toString(16).padStart(2,'0')).join('');
+}
+
+function hslToHex(h: number, s: number, l: number): string | null {
+  s /= 100; l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    return Math.round(255 * (l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1))).toString(16).padStart(2,'0');
+  };
+  return '#' + f(0) + f(8) + f(4);
+}
+
+function parseAnyColor(raw: string): string | null {
+  const s = raw.trim();
+  const hex = normalizeHex(s);
+  if (hex) return hex;
+  const rgb = s.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (rgb) return rgbToHex(parseInt(rgb[1]), parseInt(rgb[2]), parseInt(rgb[3]));
+  return null;
+}
+
+/** True for colors that are near-black, near-white, or very desaturated */
+function isNearNeutral(hex: string): boolean {
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  const lightness = (max + min) / 510;
+  const saturation = max === 0 ? 0 : (max - min) / max;
+  return lightness < 0.07 || lightness > 0.94 || saturation < 0.07;
+}
+
+/** Common framework/browser default colors to filter out */
+const FRAMEWORK_DEFAULTS = new Set([
+  '#007bff','#0d6efd','#0dcaf0','#198754','#dc3545','#ffc107','#6c757d', // Bootstrap
+  '#3b82f6','#10b981','#ef4444','#f59e0b','#6366f1','#8b5cf6',           // Tailwind
+  '#1677ff','#52c41a','#ff4d4f',                                          // Ant Design
+  '#2196f3','#4caf50','#f44336','#ff9800','#9c27b0',                      // Material UI
+  '#ff0000','#00ff00','#0000ff','#ffff00','#ff00ff','#00ffff',            // pure primaries
+]);
+
+function isFrameworkDefault(hex: string): boolean {
+  return FRAMEWORK_DEFAULTS.has(hex.toLowerCase());
 }

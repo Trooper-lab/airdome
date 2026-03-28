@@ -4,6 +4,7 @@
   --white: #FFFFFF;
   --off: #F7F5F2;
   --off2: #EEECEA;
+  --off3: #E8E5E2;
   --black: #0B0B0C;
   --ink: #FFFFFF;
   --gray: #A1A1AA;
@@ -26,6 +27,7 @@
   --color-white: var(--white);
   --color-off: var(--off);
   --color-off2: var(--off2);
+  --color-off3: var(--off3);
   --color-soft-black: #111111;
   --color-black: var(--black);
   --color-ink: var(--ink);
@@ -42,6 +44,13 @@
   --color-foreground: var(--ink);
   
   --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  --animate-shimmer: shimmer 2s linear infinite;
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
 }
 
 @layer base {

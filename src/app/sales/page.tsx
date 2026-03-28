@@ -1,381 +1,367 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { auth, db } from "@/lib/firebase/config";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { collection, getDocs, orderBy, query, doc, getDoc } from "firebase/firestore";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import React, { useMemo } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { useSales, calculateLeadScore, getTemperatureStatus } from "@/context/SalesContext";
+import { toast } from "sonner";
+import { doc, updateDoc, writeBatch } from "firebase/firestore";
+import { db } from "@/lib/firebase/config";
 
-export default function SalesDashboard() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [leads, setLeads] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [selectedLead, setSelectedLead] = useState<any | null>(null);
+export default function SalesOverviewPage() {
+  const { leads, loading, setSelectedLead, scoringWeights, teamAgents, updateLeadData } = useSales();
+  const [selectedLeadIds, setSelectedLeadIds] = React.useState<string[]>([]);
+  const [filterAgent, setFilterAgent] = React.useState<string>("all");
+  const [filterSearch, setFilterSearch] = React.useState("");
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser) {
-        router.push("/login"); // Redirect to login if not authenticated
-      } else {
-        setUser(currentUser);
-        
-        // Check if the user has completed onboarding
-        const docRef = doc(db, "users", currentUser.uid);
-        const docSnap = await getDoc(docRef);
-        
-        if (!docSnap.exists()) {
-           router.push("/onboarding");
-        } else {
-           await fetchLeads();
+  useGSAP(() => {
+    gsap.fromTo(".view-title", 
+      { opacity: 0, x: -20 },
+      { opacity: 1, x: 0, duration: 0.8, ease: "power3.out" }
+    );
+    gsap.fromTo(".card-anim", 
+      { opacity: 0, y: 20 },
+      { 
+        opacity: 1, 
+        y: 0, 
+        stagger: 0.1, 
+        duration: 1, 
+        delay: 0.2,
+        ease: "power4.out" 
+      }
+    );
+  }, []);
+
+  const { 
+    visibleLeads, 
+    activePresentations, 
+    totalLeadsCount, 
+    closedWonCount, 
+    hotLeadCount,
+    avgClosingTimeDays,
+    urgentLeadsCount
+  } = useMemo(() => {
+    // 1. Filter out Archvied/Closed leads from the main list
+    let activePipeline = leads.filter(l => l.pipeline_stage !== 'lost' && l.pipeline_stage !== 'closed');
+    const closedWon = leads.filter(l => l.pipeline_stage === 'closed');
+    
+    // 2. Apply dynamic filters
+    if (filterAgent !== "all") {
+      activePipeline = activePipeline.filter(l => (l.assignedTo || "") === (filterAgent === "unassigned" ? "" : filterAgent));
+    }
+    
+    if (filterSearch) {
+      const search = filterSearch.toLowerCase();
+      activePipeline = activePipeline.filter(l => 
+        l.email?.toLowerCase().includes(search) || 
+        l.brand?.name?.toLowerCase().includes(search)
+      );
+    }
+
+    // 3. Sort active pipeline by highest temperature score
+    const sortedActive = [...activePipeline].sort((a, b) => {
+      // Priority 1: Mandatory Urgent flag
+      if (a.isUrgent && !b.isUrgent) return -1;
+      if (!a.isUrgent && b.isUrgent) return 1;
+      // Priority 2: Score
+      return calculateLeadScore(b, scoringWeights) - calculateLeadScore(a, scoringWeights);
+    });
+
+    // 4. Calculate functional KPIs
+    const hotLeads = sortedActive.filter(l => calculateLeadScore(l, scoringWeights) >= 80).length;
+    const pendingPresentations = sortedActive.filter(l => l.pipeline_stage === 'presentation' || l.renders?.length > 0).length;
+    const urgentCount = sortedActive.filter(l => l.isUrgent).length;
+    
+    // Calculate Average Closing Time
+    let totalClosingDays = 0;
+    let closedWithDatesCount = 0;
+    
+    closedWon.forEach(l => {
+      if (l.createdAt && l.approvedAt) {
+        const start = new Date(l.createdAt).getTime();
+        const end = new Date(l.approvedAt).getTime();
+        const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        if (diffDays >= 0) {
+          totalClosingDays += diffDays;
+          closedWithDatesCount++;
         }
       }
     });
+    
+    const avgTime = closedWithDatesCount > 0 ? Math.round(totalClosingDays / closedWithDatesCount) : 0;
 
-    return () => unsubscribe();
-  }, [router]);
+    return {
+      visibleLeads: sortedActive,
+      activePresentations: pendingPresentations,
+      totalLeadsCount: leads.length,
+      closedWonCount: closedWon.length,
+      hotLeadCount: hotLeads,
+      avgClosingTimeDays: avgTime,
+      urgentLeadsCount: urgentCount
+    };
+  }, [leads, scoringWeights, filterAgent, filterSearch]);
 
-  const fetchLeads = async () => {
+  const handleBulkAssign = async (agentId: string) => {
+    if (selectedLeadIds.length === 0) return;
+    const batch = writeBatch(db);
+    selectedLeadIds.forEach(id => {
+      batch.update(doc(db, "leads", id), { assignedTo: agentId });
+    });
+    
     try {
-      const q = query(collection(db, "leads"), orderBy("createdAt", "desc"));
-      const querySnapshot = await getDocs(q);
-      const fetchedLeads = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setLeads(fetchedLeads);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-    } finally {
-      setLoading(false);
+      await batch.commit();
+      toast.success(`Assigned ${selectedLeadIds.length} leads successfully`);
+      setSelectedLeadIds([]);
+    } catch (err) {
+      toast.error("Bulk assignment failed");
     }
+  };
+
+  const toggleUrgency = async (leadId: string, currentStatus: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await updateDoc(doc(db, "leads", leadId), { isUrgent: !currentStatus });
+      toast.success(currentStatus ? "Urgent flag removed" : "Lead marked as URGENT");
+    } catch (err) {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const getLanguageFlag = (langCode: string) => {
+    const code = (langCode || 'en').toLowerCase();
+    const map: Record<string, string> = {
+      'en': '🇬🇧',
+      'nl': '🇳🇱',
+      'de': '🇩🇪',
+      'fr': '🇫🇷',
+      'es': '🇪🇸'
+    };
+    return map[code] || '🌍';
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center font-plus">
+      <div className="flex items-center justify-center p-20">
         <div className="w-12 h-12 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <>
-      <DashboardLayout user={user} activeTab={activeTab} setActiveTab={setActiveTab}>
-        <SalesContent activeTab={activeTab} leads={leads} onSelectLead={setSelectedLead} />
-      </DashboardLayout>
-      {selectedLead && (
-        <LeadInspector lead={selectedLead} onClose={() => setSelectedLead(null)} />
-      )}
-    </>
-  );
-}
-
-function SalesContent({ activeTab, leads, onSelectLead }: { activeTab?: string, leads: any[], onSelectLead: (lead: any) => void }) {
-  useGSAP(() => {
-    gsap.from(".view-title", { opacity: 0, x: -20, duration: 0.8, ease: "power3.out" });
-    gsap.from(".card-anim", { 
-      opacity: 0, 
-      y: 20, 
-      stagger: 0.1, 
-      duration: 1, 
-      delay: 0.2,
-      ease: "power4.out" 
-    });
-  }, [activeTab]);
-
-  const renderView = () => {
-    switch (activeTab) {
-      case "overview":
-        return <Overview leads={leads} onSelectLead={onSelectLead} />;
-      case "pipeline":
-        return <Pipeline leads={leads} onSelectLead={onSelectLead} />;
-      case "landings":
-        return <Landings leads={leads} />;
-      case "deals":
-        return <Deals leads={leads} />;
-      default:
-        return <Overview leads={leads} onSelectLead={onSelectLead} />;
-    }
-  };
-
-  return (
     <div className="space-y-12">
       <div className="flex justify-between items-end mb-4">
         <div>
           <h1 className="view-title font-syne font-extrabold text-[48px] tracking-tight leading-none mb-4 text-white uppercase italic">
-            {activeTab === 'overview' ? 'Overview' : 
-             activeTab === 'pipeline' ? 'Pipeline' : 
-             activeTab === 'landings' ? 'Landing Pages' : 
-             activeTab === 'deals' ? 'Contracts' : activeTab}
+            Lead Queue
           </h1>
           <p className="text-gray2 text-lg max-w-xl">
-            Manage leads and projects with our high-end sales toolkit.
+             Production-ready lead management. Optimized for 20-40 leads daily throughput.
           </p>
         </div>
-        <div className="flex gap-4 mb-4">
-           <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-end">
-              <span className="text-xs text-gray uppercase font-bold tracking-widest leading-none">Active Leads</span>
-              <span className="text-2xl font-syne font-extrabold text-accent">{leads.length}</span>
-           </div>
-           <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-end">
-              <span className="text-xs text-gray uppercase font-bold tracking-widest leading-none">Waitlist Capacity</span>
-              <span className="text-2xl font-syne font-extrabold text-white">42%</span>
-           </div>
-        </div>
-      </div>
-      
-      {renderView()}
-    </div>
-  );
-}
-
-function Overview({ leads, onSelectLead }: { leads: any[], onSelectLead: (lead: any) => void }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Quick Stats */}
-      <div className="col-span-3 grid grid-cols-1 md:grid-cols-4 gap-6 mb-4">
-        {["In Progress", "Avg. Deal", "Conversion", "Lead Velocity"].map((stat, i) => (
-          <div key={i} className="card-anim p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-accent/10 transition-all" />
-            <h3 className="text-gray uppercase text-[10px] font-bold tracking-[0.2em] mb-2">{stat}</h3>
-            <div className="text-3xl font-syne font-extrabold text-white">
-              {i === 0 ? "14" : i === 1 ? "€12.5k" : i === 2 ? "12%" : "3.4d"}
-            </div>
+        <div className="flex gap-4 items-center mb-4">
+          <div className="relative">
+            <input 
+              type="text" 
+              placeholder="Search leads..." 
+              value={filterSearch}
+              onChange={(e) => setFilterSearch(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl px-5 py-3 text-sm text-white font-syne focus:border-accent outline-none w-64 transition-all"
+            />
+            {filterSearch && (
+              <button 
+                onClick={() => setFilterSearch("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray hover:text-white"
+              >✕</button>
+            )}
           </div>
-        ))}
-      </div>
-
-      {/* Leads Table */}
-      <div className="col-span-3 card-anim rounded-3xl bg-white/5 border border-white/5 overflow-hidden backdrop-blur-sm">
-        <div className="p-8 border-b border-white/5 flex justify-between items-center">
-          <h2 className="font-syne font-extrabold text-xl tracking-tight text-white uppercase italic">Recent Leads</h2>
-          <button className="text-sm font-bold text-accent hover:underline uppercase tracking-widest">View All</button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/5 text-[12px] text-gray uppercase tracking-widest font-bold">
-                <th className="p-8 pb-4">Lead</th>
-                <th className="pb-4">Status</th>
-                <th className="pb-4">Vibe</th>
-                <th className="pb-4">Created</th>
-                <th className="pb-4 text-right pr-8">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leads.map((lead, i) => (
-                <tr 
-                  key={lead.id} 
-                  onClick={() => onSelectLead(lead)}
-                  className="group hover:bg-white/5 transition-colors border-b border-white/5 cursor-pointer"
-                >
-                  <td className="p-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center font-syne font-extrabold text-accent transition-transform group-hover:scale-110">
-                        {lead.email?.[0].toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-white">{lead.email}</div>
-                        <div className="text-xs text-gray2">{lead.brandUrl || "No brand link"}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider border border-accent/20">
-                      New Request
-                    </span>
-                  </td>
-                  <td className="text-gray2 text-sm italic">
-                    {lead.vibe || "Organic Noir"}
-                  </td>
-                  <td className="text-gray2 text-sm">
-                    {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : 'Mar 22, 2026'}
-                  </td>
-                  <td className="text-right pr-8">
-                    <button className="px-4 py-2 rounded-lg bg-white/5 text-xs font-bold hover:bg-accent hover:text-black transition-all border border-white/10">
-                      Inspect
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Pipeline({ leads, onSelectLead }: { leads: any[], onSelectLead: (lead: any) => void }) {
-  const columns = ["Discovery", "Engaged", "Proposal", "Negotiation", "Closing"];
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 h-[600px]">
-      {columns.map((col, i) => (
-        <div key={i} className="card-anim flex flex-col gap-4">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="font-syne font-extrabold text-[14px] uppercase tracking-widest text-gray">{col}</h3>
-            <span className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] text-gray font-bold">{i % 2 === 0 ? 3 : 2}</span>
-          </div>
-          <div className="flex-1 bg-white/5 rounded-3xl border border-white/5 p-4 space-y-4">
-            <div 
-              onClick={() => onSelectLead({ email: "elon@tesla.com", vibe: "Cyberpunk", size: "XL", config: "High" })}
-              className="p-4 rounded-xl bg-black/40 border border-white/5 hover:border-accent/40 transition-colors cursor-pointer group"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-[10px] font-bold text-accent uppercase tracking-tighter">High Priority</span>
-                <div className="w-6 h-6 rounded-full bg-white/5 overflow-hidden border border-white/10" />
-              </div>
-              <h4 className="text-xs font-bold text-white mb-1">Tesla Motors Inc.</h4>
-              <p className="text-[10px] text-gray2 line-clamp-2 italic mb-3">"We need a custom VIP tent for the Cybertruck rally in Berlin..."</p>
-              <div className="flex justify-between items-center pt-2 border-t border-white/5">
-                <span className="text-[10px] font-bold text-white">€45,000</span>
-                <span className="text-[10px] text-gray opacity-50">2d ago</span>
-              </div>
-            </div>
-            {/* ... other items ... */}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Landings({ leads }: { leads: any[] }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-      <div className="card-anim p-12 rounded-[40px] bg-white/5 border border-white/5 relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
-        <div className="relative z-10">
-          <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(0,242,255,0.4)]">
-             <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-             </svg>
-          </div>
-          <h2 className="font-syne font-extrabold text-3xl mb-4 italic uppercase">Landing Pages</h2>
-          <p className="text-gray2 text-lg mb-8">Deploy custom-branded landing pages for any lead. AI-optimized content for premium brand experiences.</p>
-          <button className="px-8 py-4 bg-accent text-black rounded-2xl font-bold uppercase tracking-widest hover:scale-105 transition-transform">
-            Create New Page
-          </button>
-        </div>
-      </div>
-      
-      <div className="card-anim grid grid-cols-2 gap-6">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white/5 border border-white/5 rounded-3xl p-6 hover:bg-white/10 transition-all cursor-pointer">
-            <div className="aspect-video bg-black/40 rounded-xl mb-4 overflow-hidden border border-white/10 relative">
-               <div className="absolute inset-0 bg-gradient-to-tr from-accent/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-               <div className="absolute bottom-2 right-2 px-2 py-1 bg-accent/20 rounded text-[8px] font-bold text-accent uppercase">Live</div>
-            </div>
-            <h4 className="text-xs font-bold text-white mb-1">Proposal-{i === 1 ? 'Nike' : i === 2 ? 'BMW' : 'Generic'}</h4>
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] text-gray2">24 views</span>
-              <span className="text-[10px] text-green-400 font-bold">94% Score</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Deals({ leads }: { leads: any[] }) {
-  return (
-    <div className="card-anim w-full min-h-[500px] rounded-[50px] bg-white/5 border border-white/5 flex flex-col items-center justify-center text-center p-20 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-      <div className="w-24 h-24 bg-accent/10 rounded-full flex items-center justify-center mb-10 border border-accent/30 animate-pulse">
-        <svg className="w-12 h-12 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
-      <h2 className="font-syne font-extrabold text-5xl mb-6 italic uppercase">Project Contracts</h2>
-      <p className="text-gray2 text-xl max-w-2xl mb-12">Finalize details with smart digital contracts, automated payment milestones, and secure verification.</p>
-      <div className="flex gap-6">
-        <button className="px-10 py-5 bg-white text-black rounded-2xl font-bold uppercase tracking-widest hover:bg-accent transition-colors">
-          New Contract
-        </button>
-        <button className="px-10 py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-bold uppercase tracking-widest hover:bg-white/10 transition-colors">
-          View Clauses
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function LeadInspector({ lead, onClose }: { lead: any, onClose: () => void }) {
-  useGSAP(() => {
-    gsap.from(".modal-bg", { opacity: 0, duration: 0.4 });
-    gsap.from(".modal-content", { x: "100%", duration: 0.6, ease: "power4.out" });
-  }, []);
-
-  const detailItems = [
-    { label: "Design Vibe", value: lead.vibe },
-    { label: "Project Size", value: lead.size },
-    { label: "Configuration", value: lead.config },
-    { label: "Event Type", value: lead.event },
-    { label: "Brand URL", value: lead.brandUrl, isLink: true },
-  ];
-
-  return (
-    <div className="fixed inset-0 z-[100] flex justify-end">
-      <div 
-        className="modal-bg absolute inset-0 bg-black/60 backdrop-blur-md" 
-        onClick={onClose}
-      />
-      <div className="modal-content relative w-full max-w-xl h-full bg-[#0B0B0C] border-l border-white/10 shadow-2xl overflow-hidden glassmorphism flex flex-col">
-        <div className="p-8 pb-0 flex justify-between items-center">
-          <span className="text-[10px] text-gray uppercase font-bold tracking-[0.3em]">Lead Inspector</span>
-          <button 
-            onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray hover:text-white transition-colors"
+          <select 
+            value={filterAgent}
+            onChange={(e) => setFilterAgent(e.target.value)}
+            className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[10px] text-gray uppercase font-bold tracking-widest outline-none focus:border-accent appearance-none cursor-pointer"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='gray'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em', paddingRight: '2.5rem' }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="p-12 flex-1 overflow-y-auto">
-          <div className="flex items-center gap-6 mb-12">
-            <div className="w-24 h-24 rounded-[32px] bg-accent/20 border border-accent/30 flex items-center justify-center font-syne font-extrabold text-4xl text-accent shadow-[0_0_40px_rgba(0,242,255,0.15)]">
-              {lead.email?.[0].toUpperCase()}
-            </div>
-            <div>
-              <h2 className="text-3xl font-syne font-extrabold text-white mb-2 truncate max-w-[280px]">{lead.email}</h2>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-                <span className="text-accent text-[10px] font-bold uppercase tracking-widest">Qualified Lead</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-10 mb-12">
-            {detailItems.map((item, i) => (
-              <div key={i} className="flex flex-col gap-2">
-                <span className="text-[10px] text-gray uppercase font-bold tracking-[0.2em]">{item.label}</span>
-                {item.isLink && item.value ? (
-                  <a href={item.value} target="_blank" rel="noreferrer" className="text-white hover:text-accent transition-colors font-medium text-xl truncate">
-                    {item.value}
-                  </a>
-                ) : (
-                  <span className="text-white font-medium text-2xl font-syne">{item.value || "Not specified"}</span>
-                )}
-              </div>
+            <option value="all">Every Agent</option>
+            <option value="unassigned">Unassigned Only</option>
+            {teamAgents?.map((agent: any) => (
+              <option key={agent.id} value={agent.id}>{agent.name || agent.email}</option>
             ))}
-          </div>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Quick Stats */}
+        <div className="col-span-3 grid grid-cols-1 md:grid-cols-4 gap-6 mb-4">
+          {[
+            { label: "Active Deals", value: visibleLeads.length },
+            { label: "Hot Leads (>80 Pts)", value: hotLeadCount },
+            { label: "Urgent Action Required", value: urgentLeadsCount, isAlert: urgentLeadsCount > 0 },
+            { label: "Overall Win Rate", value: totalLeadsCount ? `${Math.round((closedWonCount / totalLeadsCount) * 100)}%` : "0%" }
+          ].map((stat, i) => (
+            <div key={i} className={`card-anim p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group overflow-hidden relative ${stat.isAlert ? 'ring-2 ring-red-500/50 bg-red-500/5' : ''}`}>
+              <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 transition-all ${stat.isAlert ? 'bg-red-500/20' : 'bg-accent/5 group-hover:bg-accent/10'}`} />
+              <h3 className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-2 ${stat.isAlert ? 'text-red-400' : 'text-gray'}`}>{stat.label}</h3>
+              <div className={`text-3xl font-syne font-extrabold ${stat.isAlert ? 'text-red-500' : 'text-white'}`}>
+                {stat.value}
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="p-10 bg-white/5 border-t border-white/10 flex gap-4">
-          <button className="flex-1 px-8 py-5 bg-accent text-black rounded-2xl font-bold uppercase tracking-widest hover:scale-[1.05] transition-transform shadow-[0_0_30px_rgba(0,242,255,0.3)]">
-            Generate Experience
-          </button>
-          <button className="flex-1 px-8 py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-bold uppercase tracking-widest hover:bg-white/10 transition-colors">
-            Schedule Call
-          </button>
+        {/* Leads Table */}
+        <div className="col-span-3 card-anim rounded-3xl bg-white/5 border border-white/5 overflow-hidden backdrop-blur-sm">
+          <div className="p-8 border-b border-white/5 flex justify-between items-center">
+            <div className="flex items-center gap-6">
+              <h2 className="font-syne font-extrabold text-xl tracking-tight text-white uppercase italic">Active Pipeline</h2>
+              {selectedLeadIds.length > 0 && (
+                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-300">
+                  <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{selectedLeadIds.length} Selected</span>
+                  <select 
+                    onChange={(e) => handleBulkAssign(e.target.value)}
+                    className="bg-accent text-black text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg outline-none cursor-pointer"
+                  >
+                    <option value="">Bulk Assign To...</option>
+                    {teamAgents?.map((agent: any) => (
+                      <option key={agent.id} value={agent.id}>{agent.name || agent.email}</option>
+                    ))}
+                  </select>
+                  <button 
+                    onClick={() => setSelectedLeadIds([])}
+                    className="text-[10px] font-bold text-gray2 hover:text-white uppercase tracking-widest"
+                  >Cancel</button>
+                </div>
+              )}
+            </div>
+            <button className="text-sm font-bold text-accent hover:underline uppercase tracking-widest cursor-pointer" onClick={() => window.location.href='/sales/contracts'}>View Closed</button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[800px]">
+              <thead>
+                <tr className="border-b border-white/5 text-[10px] text-gray uppercase tracking-widest font-bold">
+                  <th className="p-8 pb-4 w-12">
+                    <input 
+                      type="checkbox" 
+                      className="accent-accent" 
+                      checked={selectedLeadIds.length === visibleLeads.length && visibleLeads.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedLeadIds(visibleLeads.map(l => l.id));
+                        else setSelectedLeadIds([]);
+                      }}
+                    />
+                  </th>
+                  <th className="pb-4">Lead Information</th>
+                  <th className="pb-4">Agent</th>
+                  <th className="pb-4">Score</th>
+                  <th className="pb-4">Status</th>
+                  <th className="pb-4">Age</th>
+                  <th className="pb-4 text-right pr-8">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleLeads.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="p-12 text-center text-gray">
+                      No active leads in your pipeline.
+                    </td>
+                  </tr>
+                )}
+                {visibleLeads.map((lead, i) => {
+                  const score = calculateLeadScore(lead, scoringWeights);
+                  const temp = getTemperatureStatus(score, scoringWeights?.thresholds);
+                  return (
+                    <tr 
+                      key={lead.id} 
+                      onClick={() => setSelectedLead(lead)}
+                      className={`group hover:bg-white/5 transition-colors border-b border-white/5 cursor-pointer ${lead.isUrgent ? 'bg-red-500/[0.03]' : ''}`}
+                    >
+                      <td className="p-8 py-6" onClick={(e) => e.stopPropagation()}>
+                        <input 
+                          type="checkbox" 
+                          className="accent-accent" 
+                          checked={selectedLeadIds.includes(lead.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedLeadIds([...selectedLeadIds, lead.id]);
+                            else setSelectedLeadIds(selectedLeadIds.filter(id => id !== lead.id));
+                          }}
+                        />
+                      </td>
+                      <td className="py-6">
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center font-syne font-extrabold text-accent transition-transform group-hover:scale-110">
+                              {lead.email?.[0].toUpperCase()}
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 text-[10px]" title={lead.language?.toUpperCase()}>
+                              {getLanguageFlag(lead.language)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <div className="font-syne font-bold text-white group-hover:text-accent transition-colors truncate max-w-[180px]">{lead.brand?.name || lead.email.split('@')[0]}</div>
+                              {lead.isUrgent && <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded font-black uppercase tracking-tighter animate-pulse">Urgent</span>}
+                            </div>
+                            <div className="text-xs text-gray2 truncate max-w-[200px]">{lead.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="pr-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-2">
+                          <select 
+                            value={lead.assignedTo || ""}
+                            onChange={(e) => updateLeadData(lead.id, { assignedTo: e.target.value })}
+                            className="bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-[10px] text-gray uppercase font-bold tracking-widest outline-none focus:border-accent transition-colors appearance-none cursor-pointer hover:bg-white/5 disabled:opacity-50"
+                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='gray'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.25rem center', backgroundSize: '0.75em', paddingRight: '1.5rem' }}
+                          >
+                            <option value="">Unassigned</option>
+                            {teamAgents?.map((agent: any) => (
+                              <option key={agent.id} value={agent.id}>
+                                {agent.name?.split(' ')[0] || agent.email?.split('@')[0] || agent.id.slice(0,6)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div className={`px-2 py-1 rounded border inline-flex items-center gap-1.5 ${temp.bg} ${temp.border}`}>
+                          <span className={`text-[10px] font-bold uppercase tracking-widest ${temp.color}`}>{score}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest border ${
+                          lead.pipeline_stage === 'presentation' || lead.renders?.length > 0 
+                            ? "bg-accent/10 text-accent border-accent/20" 
+                            : "bg-white/5 text-white border-white/10"
+                        }`}>
+                          {lead.pipeline_stage === 'presentation' || lead.renders?.length > 0 ? "Presentation" : "Discovery"}
+                        </span>
+                      </td>
+                      <td className="text-gray2 text-[11px] font-medium tracking-wide">
+                        {lead.createdAt 
+                          ? `${Math.max(0, Math.floor((new Date().getTime() - new Date(lead.createdAt).getTime()) / (1000 * 60 * 60 * 24)))}d` 
+                          : 'New'}
+                      </td>
+                      <td className="text-right pr-8">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={(e) => toggleUrgency(lead.id, !!lead.isUrgent, e)}
+                            className={`p-2 rounded-lg border transition-all ${lead.isUrgent ? 'bg-red-500/20 border-red-500/30 text-red-500' : 'bg-white/5 border-white/10 text-gray hover:text-white'}`}
+                            title={lead.isUrgent ? "Remove Urgent Flag" : "Mark as Urgent"}
+                          >
+                            <svg className="w-3.5 h-3.5" fill={lead.isUrgent ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                          </button>
+                          <button className="px-4 py-2 rounded-lg bg-accent text-black text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-all">
+                            Open
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

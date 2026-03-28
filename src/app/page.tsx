@@ -33,14 +33,14 @@ export default function LandingPage() {
           }
         });
 
-        mainTl.to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 })
-              .to(".hero-content-layer", { opacity: 0, y: -50, duration: 1 }, "-=1")
-              .to(".sticky-3d-model", { xPercent: -25, duration: 1.5 }, "-=0.2")
-              .to(".step-1", { opacity: 1, y: 0, duration: 2 }, "+=0.5")
-              .to(".step-1", { opacity: 0, y: -30, duration: 2, delay: 1 })
-              .to(".step-2", { opacity: 1, y: 0, duration: 2 }, "-=0.5")
-              .to(".step-2", { opacity: 0, y: -30, duration: 2, delay: 1 })
-              .to(".step-3", { opacity: 1, y: 0, duration: 2 }, "-=0.5");
+        mainTl.to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 }, 0)
+              .to(".hero-content-layer", { opacity: 0, y: -150, duration: 1.5 }, 0.2)
+              .to(".sticky-3d-model", { xPercent: -25, duration: 1.5 }, 2.0)
+              .to(".step-1", { opacity: 1, y: 0, duration: 1 }, 3.5)
+              .to(".step-1", { opacity: 0, y: -30, duration: 1, delay: 0.5 })
+              .to(".step-2", { opacity: 1, y: 0, duration: 1 }, "-=0.5")
+              .to(".step-2", { opacity: 0, y: -30, duration: 1, delay: 0.5 })
+              .to(".step-3", { opacity: 1, y: 0, duration: 1 }, "-=0.5");
       });
 
       mm.add("(max-width: 767px)", () => {
@@ -55,14 +55,14 @@ export default function LandingPage() {
         });
 
         // Small screen: Rise, but stay centered horizontally. Shift UP slightly so text fits below.
-        mobTl.to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 })
-             .to(".hero-content-layer", { opacity: 0, y: -50, duration: 1 }, "-=1")
-             .to(".sticky-3d-model", { yPercent: -20, duration: 1.5 }, "-=0.2") 
-             .to(".step-1", { opacity: 1, y: 0, duration: 2 }, "+=0.5")
-             .to(".step-1", { opacity: 0, y: -30, duration: 2, delay: 1 })
-             .to(".step-2", { opacity: 1, y: 0, duration: 2 }, "-=0.5")
-             .to(".step-2", { opacity: 0, y: -30, duration: 2, delay: 1 })
-             .to(".step-3", { opacity: 1, y: 0, duration: 2 }, "-=0.5");
+        mobTl.to(".model-container", { opacity: 1, scale: 1, y: 0, duration: 2 }, 0)
+             .to(".hero-content-layer", { opacity: 0, y: -150, duration: 1.5 }, 0.2)
+             .to(".sticky-3d-model", { yPercent: -20, duration: 1.5 }, 2.0) 
+             .to(".step-1", { opacity: 1, y: 0, duration: 1 }, 3.5)
+             .to(".step-1", { opacity: 0, y: -30, duration: 1, delay: 0.5 })
+             .to(".step-2", { opacity: 1, y: 0, duration: 1 }, "-=0.5")
+             .to(".step-2", { opacity: 0, y: -30, duration: 1, delay: 0.5 })
+             .to(".step-3", { opacity: 1, y: 0, duration: 1 }, "-=0.5");
       });
     }
 
@@ -82,10 +82,11 @@ export default function LandingPage() {
 
     // ENTRANCE ANIMATIONS (Non-scroll)
     const entTl = gsap.timeline({ defaults: { ease: "power4.out" } });
-    entTl.from(".nav-pill", { y: -20, opacity: 0, duration: 1, delay: 0.2 })
-         .from(".hero-title", { y: 40, opacity: 0, duration: 1 }, "-=0.6")
-         .from(".hero-sub", { y: 20, opacity: 0, duration: 1 }, "-=0.8")
-         .from(".hero-ctas", { y: 20, opacity: 0, duration: 1 }, "-=0.8");
+    entTl.to(".nav-pill", { y: 0, opacity: 1, duration: 1, delay: 0.2 })
+         .to(".trusted-by", { opacity: 1, duration: 1 }, "-=0.6")
+         .to(".hero-title", { y: 0, opacity: 1, duration: 1 }, "-=0.8")
+         .to(".hero-sub", { y: 0, opacity: 1, duration: 1 }, "-=0.8")
+         .to(".hero-ctas", { y: 0, opacity: 1, duration: 1 }, "-=0.8");
 
     // STAGGERED REVEAL FOR REVIEW CARDS
     const cards = gsap.utils.toArray(".review-card");
@@ -108,7 +109,7 @@ export default function LandingPage() {
     <div ref={containerRef} className="min-h-screen bg-white font-spline selection:bg-black selection:text-white pb-0">
       {/* Navigation - Pill style */}
       <div className="fixed top-6 left-0 right-0 z-[100] flex justify-center px-6">
-        <nav className="nav-pill flex items-center bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-full px-6 py-2 gap-8 md:gap-12">
+        <nav className="nav-pill opacity-0 -translate-y-5 flex items-center bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-full px-6 py-2 gap-8 md:gap-12">
           <div className="flex items-center">
             <img 
               src="/airdome-logo-black-320x163.png" 
@@ -130,7 +131,7 @@ export default function LandingPage() {
       </div>
 
       {/* Unified Cinematic Hero-to-Showcase Experience */}
-      <div ref={showcaseRef} className="relative h-[600vh] bg-white">
+      <div ref={showcaseRef} className="relative h-[400vh] bg-white">
         
         {/* Persistent Sticky Layer */}
         <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
@@ -157,7 +158,7 @@ export default function LandingPage() {
 
           {/* Hero Content Layer */}
           <div className="hero-content-layer relative z-30 w-full h-full flex flex-col items-center justify-center text-center px-6">
-            <div className="trusted-by w-full max-w-5xl mb-12">
+            <div className="trusted-by opacity-0 w-full max-w-5xl mb-12">
               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-6">
                 {t("hero.trust")}
               </div>
@@ -183,15 +184,15 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <h1 className="hero-title text-4xl sm:text-5xl md:text-[76px] font-bold leading-[1.05] mb-6 font-spline tracking-[-0.03em] max-w-4xl text-black">
+            <h1 className="hero-title opacity-0 translate-y-10 text-4xl sm:text-5xl md:text-[76px] font-bold leading-[1.05] mb-6 font-spline tracking-[-0.03em] max-w-4xl text-black">
               {t("hero.headline")}
             </h1>
 
-            <p className="hero-sub text-lg md:text-[21px] text-gray-500 font-medium mb-10 max-w-2xl leading-relaxed">
+            <p className="hero-sub opacity-0 translate-y-5 text-lg md:text-[21px] text-gray-500 font-medium mb-10 max-w-2xl leading-relaxed">
               {t("hero.subline")}
             </p>
 
-            <div className="hero-ctas flex flex-col items-center gap-12 mt-4">
+            <div className="hero-ctas opacity-0 translate-y-5 flex flex-col items-center gap-12 mt-4">
               <div className="flex flex-col items-center gap-6">
                 <Link 
                   href="/design"
@@ -229,9 +230,17 @@ export default function LandingPage() {
             <div className="flex-1 relative h-full flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 items-start lg:pl-24 pointer-events-auto">
               <div className="step-1 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8">
                 <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 01</div>
-                <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
-                  {t("how.step1.title")}
-                </h2>
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="mt-1.5 shrink-0 w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                    </svg>
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-bold text-black leading-tight">
+                    {t("how.step1.title")}
+                  </h2>
+                </div>
                 <p className="text-lg md:text-xl text-gray-500 font-medium max-w-md leading-relaxed">
                   {t("how.step1.desc")}
                 </p>
@@ -239,9 +248,16 @@ export default function LandingPage() {
 
               <div className="step-2 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8">
                 <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 02</div>
-                <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
-                  {t("how.step2.title")}
-                </h2>
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="mt-1.5 shrink-0 w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                    </svg>
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-bold text-black leading-tight">
+                    {t("how.step2.title")}
+                  </h2>
+                </div>
                 <p className="text-lg md:text-xl text-gray-500 font-medium max-w-md leading-relaxed">
                   {t("how.step2.desc")}
                 </p>
@@ -249,9 +265,16 @@ export default function LandingPage() {
 
               <div className="step-3 absolute inset-0 flex flex-col justify-end pb-[15vh] md:justify-center md:pb-0 opacity-0 translate-y-8">
                 <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Step 03</div>
-                <h2 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-6">
-                  {t("how.step3.title")}
-                </h2>
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="mt-1.5 shrink-0 w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-bold text-black leading-tight">
+                    {t("how.step3.title")}
+                  </h2>
+                </div>
                 <p className="text-lg md:text-xl text-gray-500 font-medium max-w-md leading-relaxed">
                   {t("how.step3.desc")}
                 </p>

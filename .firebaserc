@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "airdome-sales-app"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

@@ -42,63 +42,69 @@ export default function DashboardLayout({ children, user, activeTab, setActiveTa
 
   const navItems = [
     { id: "overview", label: "Overview", icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
       </svg>
     )},
-    { id: "pipeline", label: "Lead Pipeline", icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    { id: "pipeline", label: "Pipeline", icon: (
+      <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     )},
-    { id: "landings", label: "Landing Pages", icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    { id: "landings", label: "Presentations", icon: (
+      <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
       </svg>
     )},
     { id: "deals", label: "Contracts", icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     )},
   ];
 
   return (
-    <div className="flex min-h-screen bg-black text-white font-spline overflow-hidden">
+    <div className="flex min-h-screen bg-[#060608] text-white font-spline overflow-hidden selection:bg-accent/30 selection:text-white">
       {/* Dynamic Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-accent/10 blur-[140px] rounded-full mix-blend-screen" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[130px] rounded-full mix-blend-screen" />
       </div>
 
       {/* Sidebar */}
-      <aside className="w-72 border-r border-white/5 bg-black/40 backdrop-blur-xl z-10 flex flex-col">
-        <div className="p-8">
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,242,255,0.3)]">
-              <span className="text-black font-spline font-extrabold text-xl">A</span>
+      <aside className="w-[280px] border-r border-white/5 bg-black/40 backdrop-blur-2xl z-10 flex flex-col relative shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+        <div className="p-8 pb-4">
+          <div className="flex items-center gap-4 mb-10 group cursor-pointer">
+            <div className="w-12 h-12 bg-gradient-to-tr from-accent to-blue-400 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(0,242,255,0.4)] transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(0,242,255,0.6)] group-hover:scale-105">
+              <span className="text-black font-syne font-extrabold text-2xl">A</span>
             </div>
-            <span className="font-spline font-extrabold text-2xl tracking-tight">AIRDOME</span>
+            <span className="font-syne font-extrabold text-3xl tracking-tighter uppercase italic bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">AIRDOME</span>
           </div>
 
-          <nav className="space-y-2">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${
-                  activeTab === item.id 
-                    ? "bg-white/10 text-accent border border-white/10" 
-                    : "text-gray2 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                {item.icon}
-                <span className="font-medium">{item.label}</span>
-                {activeTab === item.id && (
-                  <div className="ml-auto w-1.5 h-1.5 bg-accent rounded-full shadow-[0_0_8px_rgba(0,242,255,1)]" />
-                )}
-              </button>
-            ))}
+          <nav className="space-y-1.5 flex flex-col">
+            {navItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`sidebar-item group relative w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 font-medium ${
+                    isActive 
+                      ? "bg-gradient-to-r from-white/10 to-transparent border border-white/10 text-white shadow-lg overflow-hidden" 
+                      : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                  }`}
+                >
+                  {isActive && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-accent rounded-r-full shadow-[0_0_12px_rgba(0,242,255,1)]" />}
+                  <div className={`relative z-10 flex items-center gap-4 ${isActive ? 'text-accent' : ''}`}>
+                    {item.icon}
+                    <span className="tracking-wide text-[15px]">{item.label}</span>
+                  </div>
+                  {isActive && (
+                    <div className="ml-auto w-1.5 h-1.5 bg-accent rounded-full shadow-[0_0_10px_rgba(0,242,255,1)] animate-pulse" />
+                  )}
+                </button>
+              );
+            })}
           </nav>
         </div>
 

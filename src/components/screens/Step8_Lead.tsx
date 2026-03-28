@@ -1,106 +1,216 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { QuestionScreen } from "@/components/ui/QuestionScreen";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
-const SuccessScreen: React.FC = () => {
-  const ref = React.useRef<HTMLDivElement>(null);
+// ─── Success Screen ────────────────────────────────────────────────────────────
+const SuccessScreen: React.FC<{ brandName: string }> = ({ brandName }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
+
   useGSAP(() => {
-    gsap.fromTo(
-      ".gsap-success", 
-      { opacity: 0, y: 15, scale: 0.95 },
-      { opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.15, ease: "back.out(1.7)" }
+    gsap.fromTo(".s8-success",
+      { opacity: 0, y: 20, scale: 0.92 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.55, stagger: 0.12, ease: "back.out(1.7)" }
     );
   }, { scope: ref });
 
   return (
-    <div ref={ref} className="flex flex-col items-center justify-center min-h-[400px]">
-       <div className="gsap-success w-16 h-16 bg-black rounded-full flex items-center justify-center mb-6 opacity-0">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-       </div>
-       <h2 className="gsap-success font-syne font-extrabold text-[32px] text-black text-center mb-2 tracking-tight opacity-0">Design <em>Initiated.</em></h2>
-       <p className="gsap-success text-gray2 text-center text-[15px] opacity-0">Check your inbox. Our designers are on it.</p>
+    <div ref={ref} className="flex flex-col items-center justify-center min-h-[420px] text-center px-4">
+      {/* Animated check */}
+      <div className="s8-success opacity-0 w-20 h-20 bg-black rounded-full flex items-center justify-center mb-7 shadow-[0_8px_32px_rgba(17,17,16,0.2)]">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <div className="s8-success opacity-0 text-[10px] tracking-[0.3em] text-gray2 uppercase mb-3">
+        {t("design.s8.success.eyebrow")}
+      </div>
+      <h2 className="s8-success opacity-0 font-syne font-extrabold text-[36px] md:text-[44px] text-black tracking-tight leading-[1.05] mb-4 max-w-[420px]">
+        {brandName
+          ? (t("design.s8.success.title.brand") as string).replace("{brand}", brandName)
+          : t("design.s8.success.title")}
+      </h2>
+      <p className="s8-success opacity-0 text-gray text-[15px] leading-relaxed max-w-[320px] mb-8">
+        {t("design.s8.success.subtitle")}
+      </p>
+      {/* Timeline */}
+      <div className="s8-success opacity-0 flex items-center gap-5 px-6 py-4 bg-off border border-line rounded-2xl">
+        {([
+          {
+            icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+            ),
+            label: t("design.s8.success.t1")
+          },
+          {
+            icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4"/><path d="M12 16h.01"/>
+              </svg>
+            ),
+            label: t("design.s8.success.t2")
+          },
+          {
+            icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            ),
+            label: t("design.s8.success.t3")
+          },
+        ] as any[]).map((item, i) => (
+          <React.Fragment key={i}>
+            <div className="text-center">
+              <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center mx-auto mb-1.5">{item.icon}</div>
+              <div className="text-[10px] text-gray2 leading-tight">{item.label}</div>
+            </div>
+            {i < 2 && <div className="w-6 h-px bg-line" />}
+          </React.Fragment>
+        ))}
+      </div>
     </div>
   );
 };
 
-export const Step8_Lead: React.FC<{ 
-  selections: any; 
-  onComplete: () => void 
-}> = ({ selections, onComplete }) => {
+// ─── Selections Summary Pill Row ───────────────────────────────────────────────
+const SummaryPills: React.FC<{ selections: any }> = ({ selections }) => {
+  const { t } = useLanguage();
+  const pills = [
+    selections?.size && { label: selections.size.replace("x", "×"), key: "size" },
+    selections?.config && { label: selections.config.split("+")[0], key: "config" },
+    selections?.event && { label: t(`design.s6.${selections.event}`) as string, key: "event" },
+    selections?.urgency && { label: t(`design.s7.${selections.urgency}`) as string, key: "urgency" },
+  ].filter(Boolean) as { label: string; key: string }[];
+
+  if (!pills.length) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1.5 mb-6 justify-center">
+      {pills.map((p) => (
+        <span key={p.key} className="text-[10px] tracking-wide text-gray2 bg-off border border-line rounded-full px-3 py-1 uppercase">
+          {p.label}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+// ─── Step 8 ────────────────────────────────────────────────────────────────────
+export const Step8_Lead: React.FC<{
+  selections: any;
+  onComplete: () => void;
+  onBack?: () => void;
+}> = ({ selections, onComplete, onBack }) => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { t, locale } = useLanguage();
+
+  const brandName = selections?.brand?.name || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && !isSubmitting) {
-      setIsSubmitting(true);
-      try {
-        await fetch("/api/leads", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-             email,
-             brandUrl: selections.brand?.url || null,
-             personality: selections.personality,
-             vibe: selections.vibe,
-             size: selections.size,
-             config: selections.config,
-             event: selections.event
-          }),
-        });
-      } catch (error) {
-        console.error("Failed to submit lead", error);
-      } finally {
-        setSubmitted(true);
-        setTimeout(() => onComplete(), 1500);
-      }
-    }
+    if (!email || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, ...selections, language: locale }),
+      });
+    } catch {}
+    setSubmitted(true);
+    setTimeout(onComplete, 2000);
   };
 
-  if (submitted) {
-    return <SuccessScreen />;
-  }
+  if (submitted) return <SuccessScreen brandName={brandName} />;
+
+  const headline = brandName
+    ? (t("design.s8.title.brand") as string).replace("{brand}", brandName)
+    : t("design.s8.title") as string;
 
   return (
     <QuestionScreen
-      phase="Final Step"
-      title={<>Where should we send <em>your design?</em></>}
-      subtitle="Our team will create a custom 3D render based on your specs."
-      canContinue={false} // We use the form submit
-      onContinue={() => {}} 
+      phase={t("design.s8.phase") as string}
+      title={<>{headline}</>}
+      subtitle={t("design.s8.subtitle") as string}
+      canContinue={true}
       hideButton={true}
+      onContinue={() => {}}
+      onBack={onBack}
     >
-      <form onSubmit={handleSubmit} className="w-full max-w-[400px] space-y-4">
-        <div className="relative group">
+      {/* Summary pills */}
+      <SummaryPills selections={selections} />
+
+      {/* Email form */}
+      <form onSubmit={handleSubmit} className="w-full max-w-[420px] space-y-3 mx-auto">
+        {/* Email + CTA inline */}
+        <div className="relative">
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="your@email.com"
-            className="w-full h-[64px] px-6 bg-white border-[1.5px] border-line rounded-2xl font-jakarta text-[16px] text-black outline-none transition-all focus:border-black placeholder:text-gray2/40"
+            placeholder={t("design.s8.placeholder") as string}
+            className="w-full h-[60px] pl-5 pr-[130px] bg-off border-[1.5px] border-line rounded-2xl font-jakarta text-[15px] text-black outline-none transition-all focus:border-black focus:bg-white placeholder:text-gray2/50"
           />
-          <button 
+          <button
             type="submit"
-            className="absolute right-2 top-2 bottom-2 px-6 bg-black text-white rounded-xl font-syne font-bold text-[14px] hover:bg-black/90 transition-all active:scale-95"
+            disabled={isSubmitting}
+            className="absolute right-2 top-2 bottom-2 px-5 bg-black text-white rounded-xl font-syne font-bold text-[12px] tracking-widest uppercase hover:bg-black/90 transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap"
           >
-            Get Design
+            {isSubmitting ? "..." : t("design.s8.button")}
           </button>
         </div>
-        
-        <div className="flex items-center gap-3 p-4 bg-off border border-line rounded-xl">
-           <div className="text-[18px]">⚡️</div>
-           <div className="text-[11px] text-gray2 leading-relaxed">
-              <strong>Zero commitment.</strong> Receive your custom 3D render and personal quote within 24 hours.
-           </div>
+
+        {/* Social proof micro-stats */}
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            {
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+              ),
+              stat: t("design.s8.stat1")
+            },
+            {
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              ),
+              stat: t("design.s8.stat2")
+            },
+            {
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              ),
+              stat: t("design.s8.stat3")
+            },
+          ].map((item: any, i) => (
+            <div key={i} className="flex flex-col items-center gap-1.5 p-3 bg-off border border-line rounded-xl">
+              <div className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center">{item.icon}</div>
+              <span className="text-[10px] text-gray2 text-center leading-tight">{item.stat}</span>
+            </div>
+          ))}
         </div>
 
-        <p className="text-[10px] text-gray2/60 text-center px-4">
-          By continuing, you agree to our Terms and that we may contact you regarding your design request.
+        {/* Legal line */}
+        <p className="text-[10px] text-gray2/50 text-center leading-relaxed">
+          {t("design.s8.terms")}
         </p>
       </form>
     </QuestionScreen>

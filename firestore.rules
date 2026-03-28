@@ -7,15 +7,21 @@ service cloud.firestore {
     }
 
     match /leads/{leadId} {
-      // Sales team can read leads if they are logged in
-      allow read: if request.auth != null;
-      // Writing is done via the /api/leads API using Admin SDK, so we deny client writes
-      allow write: if false;
+      // Sales team can read and update leads if they are logged in. (Creation is done via API)
+      allow read, update: if request.auth != null;
+      // Deny direct client creation (unless required later)
+      allow create, delete: if false;
     }
 
     match /users/{userId} {
-      // Users can only read and write their own profile document
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Any logged-in sales module user can see the agents list, but can only mutate their own profile
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /settings/{document=**} {
+      // Sales team can modify scoring weights
+      allow read, write: if request.auth != null;
     }
   }
 }
