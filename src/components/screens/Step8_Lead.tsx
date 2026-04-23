@@ -21,24 +21,24 @@ const SuccessScreen: React.FC<{ brandName: string }> = ({ brandName }) => {
   return (
     <div ref={ref} className="flex flex-col items-center justify-center min-h-[420px] text-center px-4">
       {/* Animated check */}
-      <div className="s8-success opacity-0 w-20 h-20 bg-black rounded-full flex items-center justify-center mb-7 shadow-[0_8px_32px_rgba(17,17,16,0.2)]">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <div className="s8-success opacity-0 w-20 h-20 bg-white rounded-full flex items-center justify-center mb-7 shadow-[0_8px_32px_rgba(255,255,255,0.1)]">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
       </div>
-      <div className="s8-success opacity-0 text-[10px] tracking-[0.3em] text-gray2 uppercase mb-3">
+      <div className="s8-success opacity-0 text-[10px] tracking-[0.3em] text-gray-400 uppercase mb-3">
         {t("design.s8.success.eyebrow")}
       </div>
-      <h2 className="s8-success opacity-0 font-syne font-extrabold text-[36px] md:text-[44px] text-black tracking-tight leading-[1.05] mb-4 max-w-[420px]">
+      <h2 className="s8-success opacity-0 font-syne font-extrabold text-[36px] md:text-[44px] text-white tracking-tight leading-[1.05] mb-4 max-w-[420px]">
         {brandName
           ? (t("design.s8.success.title.brand") as string).replace("{brand}", brandName)
           : t("design.s8.success.title")}
       </h2>
-      <p className="s8-success opacity-0 text-gray text-[15px] leading-relaxed max-w-[320px] mb-8">
+      <p className="s8-success opacity-0 text-gray-400 text-[15px] leading-relaxed max-w-[320px] mb-8">
         {t("design.s8.success.subtitle")}
       </p>
       {/* Timeline */}
-      <div className="s8-success opacity-0 flex items-center gap-5 px-6 py-4 bg-off border border-line rounded-2xl">
+      <div className="s8-success opacity-0 flex items-center gap-5 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl">
         {([
           {
             icon: (
@@ -69,10 +69,10 @@ const SuccessScreen: React.FC<{ brandName: string }> = ({ brandName }) => {
         ] as any[]).map((item, i) => (
           <React.Fragment key={i}>
             <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center mx-auto mb-1.5">{item.icon}</div>
-              <div className="text-[10px] text-gray2 leading-tight">{item.label}</div>
+              <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center mx-auto mb-1.5">{item.icon}</div>
+              <div className="text-[10px] text-gray-400 leading-tight">{item.label}</div>
             </div>
-            {i < 2 && <div className="w-6 h-px bg-line" />}
+            {i < 2 && <div className="w-6 h-px bg-white/10" />}
           </React.Fragment>
         ))}
       </div>
@@ -95,7 +95,7 @@ const SummaryPills: React.FC<{ selections: any }> = ({ selections }) => {
   return (
     <div className="flex flex-wrap gap-1.5 mb-6 justify-center">
       {pills.map((p) => (
-        <span key={p.key} className="text-[10px] tracking-wide text-gray2 bg-off border border-line rounded-full px-3 py-1 uppercase">
+        <span key={p.key} className="text-[10px] tracking-wide text-gray-300 bg-white/5 border border-white/10 rounded-full px-3 py-1 uppercase">
           {p.label}
         </span>
       ))}
@@ -160,12 +160,12 @@ export const Step8_Lead: React.FC<{
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("design.s8.placeholder") as string}
-            className="w-full h-[60px] pl-5 pr-[130px] bg-off border-[1.5px] border-line rounded-2xl font-jakarta text-[15px] text-black outline-none transition-all focus:border-black focus:bg-white placeholder:text-gray2/50"
+            className="w-full h-[60px] pl-5 pr-[130px] bg-white/5 border-[1.5px] border-white/10 rounded-2xl font-jakarta text-[15px] text-white outline-none transition-all focus:border-white/30 focus:bg-white/10 placeholder:text-gray-500"
           />
           <button
             type="submit"
             disabled={isSubmitting}
-            className="absolute right-2 top-2 bottom-2 px-5 bg-black text-white rounded-xl font-syne font-bold text-[12px] tracking-widest uppercase hover:bg-black/90 transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap"
+            className="absolute right-2 top-2 bottom-2 px-5 bg-white text-black rounded-xl font-syne font-bold text-[12px] tracking-widest uppercase hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap"
           >
             {isSubmitting ? "..." : t("design.s8.button")}
           </button>
@@ -201,15 +201,15 @@ export const Step8_Lead: React.FC<{
               stat: t("design.s8.stat3")
             },
           ].map((item: any, i) => (
-            <div key={i} className="flex flex-col items-center gap-1.5 p-3 bg-off border border-line rounded-xl">
-              <div className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center">{item.icon}</div>
-              <span className="text-[10px] text-gray2 text-center leading-tight">{item.stat}</span>
+            <div key={i} className="flex flex-col items-center gap-1.5 p-3 bg-white/5 border border-white/10 rounded-xl">
+              <div className="w-7 h-7 rounded-full bg-white text-black flex items-center justify-center">{item.icon}</div>
+              <span className="text-[10px] text-gray-400 text-center leading-tight">{item.stat}</span>
             </div>
           ))}
         </div>
 
         {/* Legal line */}
-        <p className="text-[10px] text-gray2/50 text-center leading-relaxed">
+        <p className="text-[10px] text-gray-500 text-center leading-relaxed">
           {t("design.s8.terms")}
         </p>
       </form>

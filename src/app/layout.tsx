@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Spline_Sans } from "next/font/google";
 import { cookies, headers } from 'next/headers';
 import { LanguageProvider } from '@/i18n/LanguageContext';
+import { MainNavigation } from "@/components/layout/MainNavigation";
 import Script from "next/script";
 import "./globals.css";
 
@@ -12,8 +13,17 @@ const splineSans = Spline_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Airdome® — Design your tent",
-  description: "Custom tent configurator by Airdome",
+  title: "Airshape — Custom Inflatable Structures",
+  description: "Pioneering premium structures for global brands by Airshape",
+  icons: {
+    icon: [
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 };
 
 export default async function RootLayout({
@@ -46,6 +56,7 @@ export default async function RootLayout({
         className={`${splineSans.variable} font-spline min-h-screen antialiased`}
       >
         <LanguageProvider initialLocale={locale}>
+          <MainNavigation />
           {children}
         </LanguageProvider>
         <Script 

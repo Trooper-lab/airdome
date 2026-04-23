@@ -31,7 +31,7 @@ const ColorSwatch: React.FC<{
     <div className="group relative flex flex-col items-center gap-2">
       {/* Swatch — clicking opens native color picker */}
       <div
-        className="relative w-12 h-12 rounded-xl border border-line shadow-sm cursor-pointer transition-transform hover:scale-110 active:scale-95"
+        className="relative w-12 h-12 rounded-xl border border-white/10 shadow-sm cursor-pointer transition-transform hover:scale-110 active:scale-95"
         style={{ backgroundColor: color }}
         onClick={() => inputRef.current?.click()}
         title="Click to change color"
@@ -61,7 +61,7 @@ const ColorSwatch: React.FC<{
       {canRemove && (
         <button
           onClick={() => onRemove(index)}
-          className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-white border border-line rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-red-400 hover:text-red-500 shadow-sm"
+          className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-white/10 border border-white/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-red-400 hover:text-red-500 shadow-sm"
           aria-label="Remove color"
         >
           <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
@@ -230,7 +230,7 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
         <span className="w-4 h-px bg-gray2" />
       </div>
 
-      <h1 className="gsap-initial-reveal font-syne font-extrabold text-[32px] md:text-[52px] leading-[1.08] tracking-tight text-black mb-4 max-w-[580px] opacity-0">
+      <h1 className="gsap-initial-reveal font-syne font-extrabold text-[32px] md:text-[52px] leading-[1.08] tracking-tight text-white mb-4 max-w-[580px] opacity-0">
         {t("design.s1.title")}
       </h1>
 
@@ -244,18 +244,18 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
           {/* Search Bar with Glow */}
           <div className="relative w-full group">
             {/* Glow effect */}
-            <div className="absolute inset-[-20px] bg-accent/20 rounded-full blur-[60px] opacity-40 animate-pulse pointer-events-none" />
+            <div className="absolute inset-[-20px] bg-white/10 rounded-full blur-[60px] opacity-40 animate-pulse pointer-events-none" />
             <div className="absolute inset-[-1px] rounded-[25px] overflow-hidden pointer-events-none opacity-40">
-              <div className="absolute inset-[-200%] bg-[conic-gradient(from_0deg,transparent_25%,rgba(0,242,255,0.8)_50%,transparent_75%)] animate-spin-slow" />
+              <div className="absolute inset-[-200%] bg-[conic-gradient(from_0deg,transparent_25%,rgba(255,255,255,0.6)_50%,transparent_75%)] animate-spin-slow" />
             </div>
 
-            <div className={`relative z-[60] flex items-center bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] overflow-hidden focus-within:border-black focus-within:shadow-[0_25px_60px_rgba(0,0,0,0.12)] transition-all duration-500 ${isScanning ? 'animate-pulse pointer-events-none' : ''}`}>
+            <div className={`relative z-[60] flex items-center bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-[24px] overflow-hidden focus-within:border-white/40 focus-within:shadow-[0_25px_60px_rgba(0,0,0,0.4)] transition-all duration-500 ${isScanning ? 'animate-pulse pointer-events-none' : ''}`}>
               {isScanning && (
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/[0.03] to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
               )}
-              <div className="absolute left-6 text-gray-300 group-focus-within:text-black transition-colors pointer-events-none">
+              <div className="absolute left-6 text-gray-500 group-focus-within:text-white transition-colors pointer-events-none">
                 {isScanning ? (
-                  <div className="w-5 h-5 border-[2.5px] border-black border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-[2.5px] border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -266,7 +266,7 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
                 id="brand-search"
                 type="text"
                 placeholder={t("design.s1.placeholder") as string || "Enter your brand or website..."}
-                className="w-full pl-[60px] pr-[140px] py-[22px] bg-transparent outline-none font-spline text-[16px] md:text-[18px] font-medium text-black placeholder:text-gray-300"
+                className="w-full pl-[60px] pr-[140px] py-[22px] bg-transparent outline-none font-spline text-[16px] md:text-[18px] font-medium text-white placeholder:text-gray-500"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleScan()}
@@ -275,7 +275,7 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
                 {query && !isScanning && (
                   <button 
                     onClick={() => setQuery("")}
-                    className="w-10 h-10 flex items-center justify-center text-gray2 hover:text-black transition-colors rounded-full hover:bg-off"
+                    className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-white transition-colors rounded-full hover:bg-white/10"
                     title="Clear"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -286,7 +286,7 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
                 <button
                   onClick={() => handleScan()}
                   disabled={!query.trim() || isScanning}
-                  className={`flex items-center justify-center transition-all ${showLogoFound ? 'w-12 h-12 bg-off text-gray hover:text-black hover:bg-line rounded-full' : 'px-6 py-3 bg-black text-white font-spline font-bold text-[13px] tracking-widest uppercase rounded-2xl hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-30'}`}
+                  className={`flex items-center justify-center transition-all ${showLogoFound ? 'w-12 h-12 bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 rounded-full' : 'px-6 py-3 bg-white text-black font-spline font-bold text-[13px] tracking-widest uppercase rounded-2xl hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-30'}`}
                   title={showLogoFound ? "Refresh / Rescan" : "Fetch"}
                 >
                   {showLogoFound ? (
@@ -301,16 +301,15 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
             </div>
           </div>
 
-          {/* Monochrome USPs below the Input */}
           <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mt-2">
             {[t("hero.micro1"), t("hero.micro2"), t("hero.micro3")].map((usp, idx) => (
-              <div key={idx} className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-gray-100 bg-white shadow-sm transition-all hover:scale-105 group/usp">
-                <div className="w-3.5 h-3.5 rounded-full bg-black flex items-center justify-center">
-                  <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div key={idx} className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-sm transition-all hover:scale-105 group/usp">
+                <div className="w-3.5 h-3.5 rounded-full bg-white flex items-center justify-center">
+                  <svg className="w-2 h-2 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-black opacity-70 group-hover/usp:opacity-100 transition-opacity whitespace-nowrap">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-white opacity-70 group-hover/usp:opacity-100 transition-opacity whitespace-nowrap">
                   {usp}
                 </span>
               </div>
@@ -321,13 +320,13 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
       {/* Scanning Indicator — High Fidelity */}
       {isScanning && (
         <div className="gsap-result-reveal flex flex-col items-center gap-4 opacity-0 mb-8 mt-12">
-          <div className="relative w-48 h-[2px] bg-off rounded-full overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black to-transparent w-1/2 animate-[shimmer_1.5s_infinite]" />
+          <div className="relative w-48 h-[2px] bg-white/10 rounded-full overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent w-1/2 animate-[shimmer_1.5s_infinite]" />
           </div>
           <div className="flex items-center gap-3">
             <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-[11px] font-syne font-bold text-black uppercase tracking-[0.2em]">
-              {t("design.s1.scanning") || "Analyzing"} <span className="text-gray2">{query}</span>
+            <span className="text-[11px] font-syne font-bold text-white uppercase tracking-[0.2em]">
+              {t("design.s1.scanning") || "Analyzing"} <span className="text-gray-400">{query}</span>
             </span>
           </div>
         </div>
@@ -335,26 +334,26 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
 
       {/* ─── Result: Brand Identity Card ─────────────────────────────────── */}
       {showLogoFound && brandDetails && (
-        <div className="gsap-result-reveal w-full max-w-[540px] bg-white border border-line rounded-[24px] p-8 mb-10 mt-12 shadow-[0_12px_40px_rgba(17,17,16,0.08)] opacity-0 text-left relative overflow-hidden group/card">
+        <div className="gsap-result-reveal w-full max-w-[540px] bg-white/5 backdrop-blur-xl border border-white/10 rounded-[24px] p-8 mb-10 mt-12 shadow-[0_12px_40px_rgba(0,0,0,0.3)] opacity-0 text-left relative overflow-hidden group/card">
           {/* Success Glow */}
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-green-500/5 blur-[80px] rounded-full" />
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/5 blur-[80px] rounded-full pointer-events-none" />
           
           <div className="flex items-center gap-6 mb-8 relative">
             {/* Logo Wrapper */}
             <div className="relative group/logo shrink-0">
-              <div className="w-[100px] h-[64px] bg-off border border-line rounded-[16px] flex items-center justify-center p-4 shadow-inner overflow-hidden transition-transform group-hover/logo:scale-[1.02]">
+              <div className="w-[100px] h-[64px] bg-black/50 border border-white/10 rounded-[16px] flex items-center justify-center p-4 shadow-inner overflow-hidden transition-transform group-hover/logo:scale-[1.02]">
                 {brandDetails.logoUrl ? (
                   <img
                     src={brandDetails.logoUrl}
                     alt={`${brandDetails.name} logo`}
-                    className="max-w-full max-h-full object-contain"
+                    className="max-w-full max-h-full object-contain brightness-0 invert"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement!.innerHTML = `<span class="font-syne font-bold text-[24px] text-black">${brandDetails.name.charAt(0).toUpperCase()}</span>`;
+                      e.currentTarget.parentElement!.innerHTML = `<span class="font-syne font-bold text-[24px] text-white">${brandDetails.name.charAt(0).toUpperCase()}</span>`;
                     }}
                   />
                 ) : (
-                  <span className="font-syne font-bold text-[24px] text-black">
+                  <span className="font-syne font-bold text-[24px] text-white">
                     {brandDetails.name.charAt(0).toUpperCase()}
                   </span>
                 )}
@@ -380,7 +379,7 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1.5">
-                <h3 className="font-syne font-bold text-[22px] text-black truncate" title={brandDetails.name}>
+                <h3 className="font-syne font-bold text-[22px] text-white truncate" title={brandDetails.name}>
                   {brandDetails.name}
                 </h3>
                 {brandDetails.logoUrl && !siteNotFound ? (
@@ -401,7 +400,7 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
           </div>
 
           {/* Divider */}
-          <div className="h-px w-full bg-line mb-5" />
+          <div className="h-px w-full bg-white/10 mb-5" />
 
           {/* Color Palette — Editable */}
           <div>
@@ -431,12 +430,12 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
                   className="swatch-new flex flex-col items-center gap-2 group"
                   title="Add color"
                 >
-                  <div className="w-12 h-12 rounded-xl border-[1.5px] border-dashed border-line flex items-center justify-center text-gray2 hover:border-black hover:text-black transition-all hover:scale-110">
+                  <div className="w-12 h-12 rounded-xl border-[1.5px] border-dashed border-white/10 flex items-center justify-center text-gray-400 hover:border-white hover:text-white transition-all hover:scale-110">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>
                   </div>
-                  <span className="text-[9px] text-gray2 group-hover:text-black transition-colors">Add</span>
+                  <span className="text-[9px] text-gray-400 group-hover:text-white transition-colors">Add</span>
                 </button>
               )}
             </div>
@@ -458,7 +457,7 @@ export const Step1_Search: React.FC<Step1Props> = ({ onComplete, initialQuery = 
         <div className="gsap-result-reveal opacity-0 mb-12">
           <button
             onClick={handleContinue}
-            className="inline-flex items-center gap-[12px] px-12 py-[20px] bg-black text-white font-syne font-bold text-[13px] tracking-widest uppercase rounded-full cursor-pointer shadow-[0_8px_30px_rgba(0,0,0,0.15)] hover:bg-zinc-800 hover:translate-y-[-2px] active:scale-95 transition-all"
+            className="inline-flex items-center gap-[12px] px-12 py-[20px] bg-white text-black font-syne font-bold text-[13px] tracking-widest uppercase rounded-full cursor-pointer shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:bg-gray-200 hover:translate-y-[-2px] active:scale-95 transition-all"
           >
             {t("design.s1.button")}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">

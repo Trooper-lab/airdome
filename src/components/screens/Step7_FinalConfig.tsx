@@ -62,36 +62,36 @@ const UrgencyCard: React.FC<{
   return (
     <div
       onClick={() => onSelect(id)}
-      className={`group flex items-center gap-4 p-5 rounded-[20px] border-[1.5px] cursor-pointer transition-all duration-300
+      className={`group flex items-center gap-4 p-5 rounded-[20px] border-[1.5px] cursor-pointer transition-all duration-300 backdrop-blur-md
         ${isSelected
-          ? "border-black bg-white shadow-[0_8px_30px_rgba(17,17,16,0.12)] -translate-y-[2px]"
-          : "border-line bg-white hover:border-[rgba(17,17,16,0.2)] hover:bg-off/30"
+          ? "border-white/30 bg-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.3)] -translate-y-[2px]"
+          : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
         }
       `}
     >
       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300
-        ${isSelected ? "bg-black text-white" : "bg-off text-gray group-hover:text-black"}`}
+        ${isSelected ? "bg-white text-black" : "bg-white/10 text-gray-400 group-hover:text-white"}`}
       >
         {UrgencyIcons[id]}
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <div className="font-syne font-bold text-[15px] text-black tracking-tight">{label}</div>
+          <div className="font-syne font-bold text-[15px] text-white tracking-tight">{label}</div>
           {tag && (
-            <span className="px-2 py-0.5 rounded-full bg-off border border-line text-[9px] font-bold text-gray2 uppercase tracking-tight">
+            <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20 text-[9px] font-bold text-gray-400 uppercase tracking-tight">
               {tag}
             </span>
           )}
         </div>
-        <div className="text-[11px] text-gray2 leading-relaxed">{hint}</div>
+        <div className="text-[11px] text-gray-400 leading-relaxed">{hint}</div>
       </div>
 
       <div className={`shrink-0 w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center transition-all duration-300
-        ${isSelected ? "border-black bg-black" : "border-line bg-transparent"}`}
+        ${isSelected ? "border-white bg-white" : "border-white/10 bg-transparent"}`}
       >
         {isSelected && (
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         )}

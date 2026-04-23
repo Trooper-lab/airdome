@@ -4,7 +4,7 @@ import { adminDb } from "@/lib/firebase/admin";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, brand, personality, vibe, size, config, event, urgency, language } = body;
+    const { email, brand, personality, vibe, size, config, event, urgency, language, product } = body;
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -30,6 +30,7 @@ export async function POST(request: Request) {
       event: event || null,
       urgency: urgency || null,
       language: language || "en",
+      product: product || "airdome", // Default to airdome for backwards compatibility
       slug,
       createdAt: new Date().toISOString(),
     };

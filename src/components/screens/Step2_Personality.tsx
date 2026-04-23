@@ -33,35 +33,35 @@ const ARCHETYPE_STYLES: Record<string, {
     dot: "border-blue-400/30",
   },
   clean: {
-    // Pure white, ultra-minimal — the void
-    card: "bg-white border-[#e8e8e8] hover:border-[#c8c8c8] shadow-[inset_0_0_0_0.5px_#e0e0e0]",
-    bar: "bg-black",
-    num: "text-black/4",
-    name: "text-black",
-    ref: "text-black/30",
-    dot: "border-[#c0c0c0]",
+    // Pure dark, ultra-minimal — the void
+    card: "bg-white/5 border-white/10 hover:border-white/20 shadow-sm backdrop-blur-md",
+    bar: "bg-white",
+    num: "text-white/5",
+    name: "text-white",
+    ref: "text-white/40",
+    dot: "border-white/30",
   },
   premium: {
-    // Warm champagne with gold — elevated luxury
-    card: "bg-[#f7f2e8] border-[#e8ddc0] hover:border-[#c9a84c]",
+    // Dark champagne with gold — elevated luxury
+    card: "bg-[#1a1814] border-[#3a3324] hover:border-[#c9a84c]",
     bar: "bg-[#c9a84c]",
-    num: "text-[#c9a84c]/12",
-    name: "text-[#1a1208]",
-    ref: "text-[#8a7040]/60",
+    num: "text-[#c9a84c]/10",
+    name: "text-[#c9a84c]",
+    ref: "text-[#c9a84c]/60",
     dot: "border-[#c9a84c]/40",
   },
   friendly: {
-    // Warm terracotta — approachable, human
-    card: "bg-[#fdf0e8] border-[#f0d8c4] hover:border-[#d4856a]",
+    // Dark terracotta — approachable, human
+    card: "bg-[#2a1b16] border-[#4a3026] hover:border-[#d4856a]",
     bar: "bg-[#d4856a]",
     num: "text-[#d4856a]/10",
-    name: "text-[#2a1208]",
-    ref: "text-[#8a5040]/55",
+    name: "text-[#d4856a]",
+    ref: "text-[#d4856a]/60",
     dot: "border-[#d4856a]/40",
   },
   other: {
     // Iridescent / experimental — gradient shimmer
-    card: "bg-[linear-gradient(135deg,#f0ecff,#ffe8f8,#e8f8ff)] border-[#d8d0f0] hover:border-[#a090d0]",
+    card: "bg-[linear-gradient(135deg,#1a1525,#251520,#152025)] border-[#3a2d50] hover:border-[#a090d0]",
     bar: "bg-[linear-gradient(90deg,#9333ea,#ec4899,#06b6d4)]",
     num: "text-purple-200/20",
     name: "text-[#1a0a2a]",

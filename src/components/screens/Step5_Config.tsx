@@ -26,36 +26,36 @@ const ConfigCard: React.FC<{
 }> = ({ id, name, hint, image, isSelected, onSelect }) => (
   <div
     onClick={() => onSelect(id)}
-    className={`group relative overflow-hidden rounded-[16px] border-[1.5px] cursor-pointer transition-all duration-200
+    className={`group relative overflow-hidden rounded-[16px] border-[1.5px] cursor-pointer transition-all duration-200 backdrop-blur-md
       ${isSelected
-        ? "border-black bg-white shadow-[0_6px_24px_rgba(17,17,16,0.1)] scale-[1.01]"
-        : "border-line bg-off hover:border-[rgba(17,17,16,0.2)] hover:bg-off2"
+        ? "border-white/30 bg-white/10 shadow-[0_6px_24px_rgba(0,0,0,0.3)] scale-[1.01]"
+        : "border-transparent bg-white/5 hover:border-white/20 hover:bg-white/10"
       }
     `}
   >
-    {isSelected && <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-black z-10" />}
+    {isSelected && <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-white z-10" />}
 
-    {/* Tent image — taller so the drawing is actually visible */}
-    <div className="relative h-[140px] w-full flex items-center justify-center p-3 bg-[#f8f7f5]">
+    {/* Tent image */}
+    <div className="relative h-[140px] w-full flex items-center justify-center p-3 bg-white/5">
       <Image
         src={image}
         alt={name}
         width={180}
         height={130}
-        className={`object-contain max-h-full transition-transform duration-300 ${isSelected ? "scale-105" : "group-hover:scale-[1.03]"}`}
+        className={`object-contain max-h-full transition-transform duration-300 invert brightness-0 ${isSelected ? "scale-105" : "group-hover:scale-[1.03]"}`}
       />
     </div>
 
     <div className="p-3 pt-2.5">
-      <div className="font-syne font-bold text-[12px] text-black mb-0.5">{name}</div>
-      <div className="text-[10px] text-gray2 leading-relaxed">{hint}</div>
+      <div className="font-syne font-bold text-[12px] text-white mb-0.5">{name}</div>
+      <div className="text-[10px] text-gray-400 leading-relaxed">{hint}</div>
     </div>
 
     <div className={`absolute top-3 right-3 w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center transition-all duration-200
-      ${isSelected ? "border-black bg-black" : "border-line bg-white"}`}
+      ${isSelected ? "border-white bg-white" : "border-white/10 bg-white/5"}`}
     >
       {isSelected && (
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12" />
         </svg>
       )}
@@ -107,32 +107,31 @@ export const Step5_Config: React.FC<{
         </div>
       </div>
 
-      {/* Extension Toggle — larger luifel image */}
+      {/* Extension Toggle */}
       <div
         onClick={() => setWithExtension(v => !v)}
-        className={`mt-3 w-full max-w-[540px] flex items-center gap-4 p-4 rounded-[16px] border-[1.5px] cursor-pointer transition-all duration-200
+        className={`mt-3 w-full max-w-[540px] flex items-center gap-4 p-4 rounded-[16px] border-[1.5px] cursor-pointer transition-all duration-200 backdrop-blur-md
           ${withExtension
-            ? "border-black bg-white shadow-[0_4px_16px_rgba(17,17,16,0.08)]"
-            : "border-line bg-off hover:border-[rgba(17,17,16,0.2)] hover:bg-off2"
+            ? "border-white/30 bg-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+            : "border-transparent bg-white/5 hover:border-white/20 hover:bg-white/10"
           }
         `}
       >
-        {/* Larger luifel preview */}
-        <div className="w-[100px] h-[68px] rounded-xl bg-[#f0ede8] border border-line flex items-center justify-center overflow-hidden shrink-0 p-2">
-          <Image src={LUIFEL_IMAGE} alt="Canopy extension" width={92} height={60} className="object-contain" />
+        <div className="w-[100px] h-[68px] rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0 p-2">
+          <Image src={LUIFEL_IMAGE} alt="Canopy extension" width={92} height={60} className="object-contain invert brightness-0" />
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="font-syne font-bold text-[13px] text-black">{t("design.s5.extension.title") as string}</div>
-          <div className="text-[11px] text-gray2 mt-0.5 leading-relaxed">{t("design.s5.extension.hint") as string}</div>
+          <div className="font-syne font-bold text-[13px] text-white">{t("design.s5.extension.title") as string}</div>
+          <div className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">{t("design.s5.extension.hint") as string}</div>
         </div>
 
         {/* Toggle */}
         <div
-          className={`shrink-0 w-11 rounded-full border-[1.5px] relative transition-all duration-200 flex items-center ${withExtension ? "bg-black border-black" : "bg-off2 border-line"}`}
+          className={`shrink-0 w-11 rounded-full border-[1.5px] relative transition-all duration-200 flex items-center ${withExtension ? "bg-white border-white" : "bg-white/5 border-white/20"}`}
           style={{ height: 24 }}
         >
-          <div className={`absolute top-[3px] w-[16px] h-[16px] rounded-full bg-white shadow transition-all duration-200 ${withExtension ? "left-[20px]" : "left-[3px]"}`} />
+          <div className={`absolute top-[2.5px] w-[16px] h-[16px] rounded-full shadow transition-all duration-200 ${withExtension ? "left-[20px] bg-black" : "left-[3px] bg-gray-400"}`} />
         </div>
       </div>
     </QuestionScreen>

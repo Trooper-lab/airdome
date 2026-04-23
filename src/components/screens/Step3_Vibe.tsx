@@ -23,20 +23,20 @@ const VIBE_STYLES: Record<string, {
     glow: "after:absolute after:top-0 after:left-0 after:right-0 after:h-[2px] after:bg-[linear-gradient(90deg,#00f0ff,#ff00c8)] after:opacity-0 group-hover:after:opacity-100 after:transition-opacity",
   },
   v2: {
-    // Zen & Natural — warm sage, soft and calm
-    card: "bg-[#eef2ec] border-[#d0dbc8]",
+    // Zen & Natural — dark sage, soft and calm
+    card: "bg-[#141a12] border-[#2a3824]",
     selectedBorder: "border-[#6b9e5e] shadow-[0_4px_20px_rgba(107,158,94,0.12)]",
-    badge: "bg-[#6b9e5e]/10 border-[#6b9e5e]/25 text-[#4a7a40]",
-    name: "text-[#1a2818]",
-    hint: "text-[#4a5a44]/60",
+    badge: "bg-[#6b9e5e]/10 border-[#6b9e5e]/25 text-[#8bce7e]",
+    name: "text-white",
+    hint: "text-[#8bce7e]/60",
   },
   v3: {
-    // Industrial & Raw — concrete gray, exposed, mono
-    card: "bg-[#c8c4bc] border-[#aaa49c]",
-    selectedBorder: "border-[#333] shadow-[0_4px_20px_rgba(0,0,0,0.15)]",
-    badge: "bg-black/10 border-black/20 text-black/70",
-    name: "text-black",
-    hint: "text-black/45",
+    // Industrial & Raw — dark concrete gray, exposed, mono
+    card: "bg-[#181818] border-[#333333]",
+    selectedBorder: "border-[#888] shadow-[0_4px_20px_rgba(255,255,255,0.05)]",
+    badge: "bg-white/5 border-white/10 text-white/70",
+    name: "text-white",
+    hint: "text-white/45",
   },
   v4: {
     // Future & Tech — deep dark, electric blue scanlines

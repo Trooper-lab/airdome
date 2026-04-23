@@ -11,9 +11,9 @@ const SquareFloorPlan: React.FC<{
   multi?: boolean;    // show two overlapping squares for "Multiple"
   isSelected: boolean;
 }> = ({ s, multi = false, isSelected }) => {
-  const stroke = isSelected ? "#111111" : "#C8C4BC";
-  const fill   = isSelected ? "rgba(17,17,17,0.05)" : "rgba(200,196,188,0.18)";
-  const dot    = isSelected ? "#111111" : "#C8C4BC";
+  const stroke = isSelected ? "#FFFFFF" : "#555555";
+  const fill   = isSelected ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)";
+  const dot    = isSelected ? "#FFFFFF" : "#555555";
   const half   = s / 2;
 
   // Single dome centred at (40, 31)
@@ -87,10 +87,10 @@ const SizeCard: React.FC<{
   <div
     onClick={() => onSelect(id)}
     className={`relative p-4 pb-3 text-center cursor-pointer transition-all duration-200 rounded-[16px] border-[1.5px] flex flex-col items-center gap-2
-      ${isSelected ? "bg-white border-black shadow-[0_4px_20px_rgba(17,17,16,0.08)]" : "bg-off border-transparent hover:bg-off2 hover:border-[rgba(17,17,16,0.12)]"}
+      ${isSelected ? "bg-white/10 border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.3)] backdrop-blur-md" : "bg-white/5 border-transparent hover:bg-white/10 hover:border-white/20"}
     `}
   >
-    {isSelected && <div className="absolute top-0 left-6 right-6 h-0.5 bg-black rounded-b" />}
+    {isSelected && <div className="absolute top-0 left-6 right-6 h-0.5 bg-white rounded-b" />}
 
     {/* Floor plan graphic or question mark */}
     <div className="h-[60px] flex items-center justify-center">
@@ -98,16 +98,16 @@ const SizeCard: React.FC<{
         <SquareFloorPlan s={s} multi={multi} isSelected={isSelected} />
       ) : (
         <div className={`w-12 h-12 rounded-full border-[2px] flex items-center justify-center text-[22px] font-syne font-bold
-          ${isSelected ? "border-black text-black" : "border-line text-gray2"}`}>
+          ${isSelected ? "border-white text-white" : "border-white/10 text-gray-500"}`}>
           ?
         </div>
       )}
     </div>
 
     <div>
-      <div className="font-syne font-bold text-[13px] text-black">{label}</div>
-      {sqm && <div className="text-[10px] font-mono text-gray2 mt-px">{sqm}</div>}
-      <div className="text-[9px] tracking-[0.08em] text-gray2 uppercase mt-1">{sub}</div>
+      <div className="font-syne font-bold text-[13px] text-white">{label}</div>
+      {sqm && <div className="text-[10px] font-mono text-gray-400 mt-px">{sqm}</div>}
+      <div className="text-[9px] tracking-[0.08em] text-gray-500 uppercase mt-1">{sub}</div>
     </div>
   </div>
 );
@@ -142,10 +142,10 @@ export const Step4_Size: React.FC<{
 
       {/* Dimension note */}
       <div className="mt-5 flex items-center gap-2 px-1">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray2 shrink-0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 shrink-0">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
-        <p className="text-[10px] text-gray2">{t("design.s4.note") as string}</p>
+        <p className="text-[10px] text-gray-500">{t("design.s4.note") as string}</p>
       </div>
     </QuestionScreen>
   );

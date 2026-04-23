@@ -26,34 +26,15 @@ export const ToolNav: React.FC<ToolNavProps> = ({ currentStep, onStepClick }) =>
   if (currentStep > 6) phase = "3 OF 3";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[200] bg-white border-b border-line">
-      {/* Top Header */}
-      <div className="h-[60px] px-6 md:px-12 flex items-center justify-between border-b border-line">
-        <Link 
-          href="/" 
-          className="hover:opacity-70 transition-opacity"
-        >
-          <img 
-            src="/airdome-logo-black-320x163.png" 
-            alt="Airdome Logo" 
-            className="h-6 md:h-7 w-auto object-contain"
-          />
-        </Link>
-        <div className="flex items-center gap-4">
-          <LanguageSwitcher />
-          <span className="font-spline font-bold text-[9px] tracking-[0.15em] text-black uppercase px-[14px] py-[6px] border-[1.5px] border-line rounded-full bg-off">
-            {t("toolnav.phase")} {phase}
-          </span>
-        </div>
-      </div>
+    <nav className="fixed top-[80px] left-0 right-0 z-[200] bg-[#0A0A0A] border-b border-white/10">
 
       {/* Timeline */}
       <div className="w-full relative px-6 md:px-12 pb-3 pt-[14px]">
         {/* Lines Container (absolute to align exactly with dots' centers) */}
         <div className="absolute top-[18px] left-6 right-6 md:left-12 md:right-12 px-[5px]">
-          <div className="w-full h-px bg-line relative rounded-full">
+          <div className="w-full h-px bg-white/10 relative rounded-full">
             <div 
-              className="absolute top-0 left-0 h-full bg-black transition-all duration-700 ease-out rounded-full"
+              className="absolute top-0 left-0 h-full bg-white transition-all duration-700 ease-out rounded-full"
               style={{ width: `${progress}%` }} 
             />
           </div>
@@ -74,13 +55,13 @@ export const ToolNav: React.FC<ToolNavProps> = ({ currentStep, onStepClick }) =>
               >
                 <div 
                   className={`transition-all duration-300 rounded-full
-                    ${isDone ? "w-2 h-2 bg-black" : "w-2 h-2 bg-off border-[1.5px] border-line"} 
-                    ${isActive ? "w-[9px] h-[9px] bg-black shadow-[0_0_0_2px_white,0_0_0_3.5px_black]" : ""}
+                    ${isDone ? "w-2 h-2 bg-white" : "w-2 h-2 bg-white/10 border-[1.5px] border-white/20"} 
+                    ${isActive ? "w-[9px] h-[9px] bg-white shadow-[0_0_0_2px_#0A0A0A,0_0_0_3.5px_white]" : ""}
                     ${stepNum < currentStep ? "group-hover/item:scale-125" : ""}
                   `}
                 />
                 <span className={`text-[7px] sm:text-[8px] tracking-[0.08em] uppercase whitespace-nowrap transition-colors
-                  ${isActive ? "text-black font-bold" : "text-gray2 group-hover/item:text-black"}
+                  ${isActive ? "text-white font-bold" : "text-gray-500 group-hover/item:text-white"}
                 `}>
                   {t(stepKey)}
                 </span>

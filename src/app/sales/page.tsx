@@ -298,6 +298,9 @@ export default function SalesOverviewPage() {
                           <div>
                             <div className="flex items-center gap-2">
                               <div className="font-syne font-bold text-white group-hover:text-accent transition-colors truncate max-w-[180px]">{lead.brand?.name || lead.email.split('@')[0]}</div>
+                              <span className={`text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter ${lead.product === 'airgate' ? 'bg-blue-500 text-white' : 'bg-white/20 text-white'}`}>
+                                {lead.product === 'airgate' ? 'Airgate' : 'Airdome'}
+                              </span>
                               {lead.isUrgent && <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded font-black uppercase tracking-tighter animate-pulse">Urgent</span>}
                             </div>
                             <div className="text-xs text-gray2 truncate max-w-[200px]">{lead.email}</div>
