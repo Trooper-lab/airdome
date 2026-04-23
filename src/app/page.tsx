@@ -141,8 +141,8 @@ export default function AirshapeHomePage() {
                 <div className="w-full h-32 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
                   {/* @ts-ignore */}
                   <model-viewer
-                    src="/3d/model.glb"
-                    poster="/3d/poster.png"
+                    src="/3d/gate.glb"
+                    poster="/3d/gate-poster.png"
                     alt="Airgate 3D Model"
                     auto-rotate
                     shadow-intensity="1"

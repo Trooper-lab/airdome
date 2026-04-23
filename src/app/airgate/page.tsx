@@ -145,8 +145,8 @@ export default function LandingPage() {
             <div className="model-container w-full h-full max-w-[800px] flex items-center justify-center transform-gpu opacity-0 scale-[0.85] translate-y-[80vh] z-0">
               {/* @ts-ignore */}
               <model-viewer
-                src="/3d/model.glb"
-                poster="/3d/poster.png"
+                src="/3d/gate.glb"
+                poster="/3d/gate-poster.png"
                 alt="Airgate 3D Model"
                 auto-rotate
                 shadow-intensity="1"
